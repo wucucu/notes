@@ -1,0 +1,595 @@
+Parallel Programming
+====
+
+These are some notes for the 3rd course of Scala Specialization on Cousera.
+
+<!-- TOC -->
+
+- [1. Week 1 Basics](#1-week-1-basics)
+  - [1.1. JVM and parallelism](#11-jvm-and-parallelism)
+    - [1.1.1. Process](#111-process)
+    - [1.1.2. Threads](#112-threads)
+    - [1.1.3. Creating/Starting Threads](#113-creatingstarting-threads)
+    - [1.1.4. Example: Starting Threads](#114-example-starting-threads)
+    - [1.1.5. Atomicity](#115-atomicity)
+    - [1.1.6. The Synchronized Block](#116-the-synchronized-block)
+    - [1.1.7. Composition whith the synchronized block](#117-composition-whith-the-synchronized-block)
+    - [1.1.8. Deadlocks](#118-deadlocks)
+    - [1.1.9. Memory Model](#119-memory-model)
+    - [1.1.10. Summary](#1110-summary)
+  - [1.2. Running Computations in Parallel](#12-running-computations-in-parallel)
+    - [1.2.1. Basic parallel construct](#121-basic-parallel-construct)
+    - [1.2.2. Example: computing p-norm](#122-example-computing-p-norm)
+    - [1.2.3. Signature of parallel](#123-signature-of-parallel)
+    - [1.2.4. Underlying Hardware Architecture Affects Performance](#124-underlying-hardware-architecture-affects-performance)
+    - [1.2.5. Combining computations of different length with parallel](#125-combining-computations-of-different-length-with-parallel)
+    - [1.2.6. Example: Monte Carlo Method to Estimate $\pi$](#126-example-monte-carlo-method-to-estimate-\pi)
+  - [1.3. First-Class Tasks](#13-first-class-tasks)
+    - [1.3.1. More flexible construct for parallel computation](#131-more-flexible-construct-for-parallel-computation)
+    - [1.3.2. Task interface](#132-task-interface)
+  - [1.4. How Fast are Parallel Programs](#14-how-fast-are-parallel-programs)
+    - [1.4.1. Work and depth](#141-work-and-depth)
+    - [1.4.2. Rules for depth and work](#142-rules-for-depth-and-work)
+    - [1.4.3. Computing time bound for given parallelism](#143-computing-time-bound-for-given-parallelism)
+    - [1.4.4. Parallelism and Amdahl's Law](#144-parallelism-and-amdahls-law)
+  - [1.5. Benchmarking Parallel Programs](#15-benchmarking-parallel-programs)
+    - [1.5.1. Testing and Benchmarking](#151-testing-and-benchmarking)
+    - [1.5.2. Benchmarking Parallel Programs](#152-benchmarking-parallel-programs)
+    - [1.5.3. Performance Factors](#153-performance-factors)
+    - [1.5.4. Measurement Methodologies](#154-measurement-methodologies)
+    - [1.5.5. ScalaMeter](#155-scalameter)
+    - [1.5.6. Using ScalaMeter](#156-using-scalameter)
+    - [1.5.7. ScalaMeter Warmers](#157-scalameter-warmers)
+    - [1.5.8. ScalaMeter Measures](#158-scalameter-measures)
+- [2. Week 2 Task-Parallelism](#2-week-2-task-parallelism)
+- [3. Week 3 Data-ParaLLelism](#3-week-3-data-parallelism)
+- [4. Week 4 Data Structures](#4-week-4-data-structures)
+
+<!-- /TOC -->
+
+
+# 1. Week 1 Basics
+## 1.1. JVM and parallelism
+
+  We assume 
+
+  - Our parallel programming model applied for **multicore** or **multiprocessor** systems with shared memory.
+  - Operating system and the JVM as the underlying runtim environments.
+
+### 1.1.1. Process
+  
+  **Operating System** : software that manages hardware and software resources, and shedules program executions.
+  
+  **Process** : an instance of a program that is executing in the OS.
+  
+  The OS multiplexes many different processes and a limited number of CPUs, so that they get **time slices** of execution. This mechanism is called **multitasking**.
+  
+  Two different processes cannot access each other's memorty directly, i.e., they are isolated.
+
+### 1.1.2. Threads
+
+  **Thread** : Each process can contian multiple independent concurrency units called **threads**.
+
+  Threads can be started from within the same program, and they share the same memory address space.
+
+  Each thread has a program counter and a program stack.
+
+### 1.1.3. Creating/Starting Threads
+
+  Each JVM process starts with a **main thread**.
+
+  To start additional threads:
+  1. Define a Thread subclass.
+  2. Instantiate a new Thread object.
+  3. Call *start* method on the Thread object.
+
+  The Thread subclass defines the code that the thread will eecute. The same custom *Thread* subclass can be used to start multiple threads.
+
+### 1.1.4. Example: Starting Threads
+
+  Run in sbt scala console with paste mode.
+
+```
+scala> :paste
+// Entering paste mode (ctrl-D to finish)
+```
+```scala
+class HelloThread extends Thread {
+  override def run() {
+    println("Hello world!")
+  }
+}
+
+val t = new HelloThread
+
+t.start()
+t.join()
+```
+
+```
+Hello world!
+defined class HelloThread
+t: HelloThread = Thread[Thread-8,5,]
+```
+
+  Try 2 threads at the same time.
+```scala
+class HelloThread extends Thread {
+  override def run() {
+    println("Hello ")
+    println("world!")
+  }
+}
+
+def main() {
+  val t = new HelloThread
+  val s = new HelloThread
+
+  t.start()
+  s.start()
+  t.join()
+  s.join()
+}
+```
+
+```
+scala> main()
+Hello 
+Hello 
+world!
+world!
+
+scala> main()
+Hello 
+world!
+Hello 
+world!
+
+scala> main()
+Hello 
+world!
+Hello 
+world!
+```
+
+### 1.1.5. Atomicity
+
+  The previous demo showed that separate statements in two threads can overlap.
+
+  In some cases, we want to ensure that a sequence of statements in a specific thread executes at once.
+
+  An operation is **atomic** if it appears as if it occurred instantaneously from the point of view of other threads.
+
+  A demo:
+
+```scala
+private var uidCount = 0L
+def getUniqueId(): Long = {
+  uidCount = uidCount + 1
+  uidCount
+}
+
+def startThread() = {
+  val t = new Thread {
+    override def run() {
+      val uids = for (i <- 0 until 10) yield getUniqueId()
+      println(uids)
+    }
+  }
+
+t.start()
+t
+}
+
+startThread
+startThread
+```
+```
+getUniqueId: ()Long
+startThread: ()Thread
+res0: Thread = Thread[Thread-53,5,run-main-group-2]
+
+scala> Vector(1, 2, 3, 4, 5, 6, 7, 8, 10, 12)
+Vector(1, 7, 9, 11, 13, 14, 15, 16, 17, 18)
+```
+
+### 1.1.6. The Synchronized Block
+
+  The *sychronized* block is used to achiece atomicity. Code block after a *synchronized* call on an object x is never executed by two threads at the same time.
+
+```scala
+ //The synchronized method must be invoded on an instance of some object.
+private val x = new AnyRef {}
+private var uidCount = 0L
+def getUniqueId(): Long = x.synchronized {
+  uidCount = uidCount + 1
+  uidCount
+}
+
+def startThread() = {
+  val t = new Thread {
+    override def run() {
+      val uids = for (i <- 0 until 10) yield getUniqueId()
+      println(uids)
+    }
+  }
+
+t.start()
+t
+}
+
+startThread
+startThread
+```
+```
+Vector(2, 3, 4, 5, 6, 7, 8, 9, 10, 11)
+Vector(1, 12, 13, 14, 15, 16, 17, 18, 19, 20)
+getUniqueId: ()Long
+startThread: ()Thread
+res0: Thread = Thread[Thread-3,5,]
+```
+
+  Different threads use the synchonized block to agrre on unique values. 
+  The synchronized block is an example of a synchronization primitive.
+
+### 1.1.7. Composition whith the synchronized block
+  
+  Invocations of the synchronized block can nest.
+
+```scala
+class Account(private var amount: Int = 0) {
+  def transfer(target: Account, n: Int) =
+    this.synchronized {
+      target.synchronized {
+        this.amount -= n
+        target.amount += n
+      }
+  }
+}
+
+
+def startThread(a: Account, b: Account, n: Int) = {
+  val t = new Thread {
+    override def run(): Unit = {
+      for (i <- 0 until n) {
+        a.transfer(b, 1)
+      }
+    }
+  }
+  t.start()
+  t
+}
+
+val a1 = new Account(500000)
+val a2 = new Account(700000)
+
+val t = startThread(a1, a2, 150000)
+val s = startThread(a2, a1, 150000)
+
+t.join()
+s.join()
+```
+
+### 1.1.8. Deadlocks
+
+  **Deadlock** is a scenario in which two or more threads compete for resources(such as monitor ownership), and wait for each to finish without releasing the already acquired resources.
+
+  One approach to resolve deadlocks is to always acquire resources in the same order.
+  This assume an ordering relationship on the resources.
+
+```scala
+private val x = new AnyRef {}
+private var uidCount = 0L
+
+def getUniqueId(): Long = {
+  uidCount = uidCount + 1
+  uidCount
+}
+
+class Account(private var amount: Int = 0) {
+
+  val uid = getUniqueId()
+
+  private def lockAndTransfer(target: Account, n: Int) =
+    this.synchronized {
+      target.synchronized {
+        this.amount -= n
+        target.amount += n
+      }
+    }
+
+  def transfer(target: Account, n: Int) =
+    if (this.uid < target.uid) this.lockAndTransfer(target, n)
+    else target.lockAndTransfer(this, n)
+}
+
+
+def startThread(a: Account, b: Account, n: Int) = {
+  val t = new Thread {
+    override def run(): Unit = {
+      for (i <- 0 until n) {
+        a.transfer(b, 1)
+      }
+    }
+  }
+  t.start()
+  t
+}
+
+val a1 = new Account(500000)
+val a2 = new Account(700000)
+
+val t = startThread(a1, a2, 150000)
+val s = startThread(a2, a1, 150000)
+
+t.join()
+s.join()
+```
+
+### 1.1.9. Memory Model
+
+  Memory model is a set of rules that describes how threads interact when accessing shared memory.
+
+  Java Memory Model - the memory model for the JVM
+
+  Following is two rules of JMM(a subset of the whole rules) which should be remembered in this course:
+  1. Thwo threads writing to separate locations in memory do not need synchronization.
+  2. A thread X that calls *join* method on another thread Y is guaranteed to ovserve all the writes by thread Y after *join* returns.
+
+### 1.1.10. Summary
+
+  The parallelism constructs in the remainder of the course are implemented in terms of:
+  - threads
+  - synchronization primitives such as *synchronized* 
+
+## 1.2. Running Computations in Parallel
+
+### 1.2.1. Basic parallel construct
+  
+  Given expressiongs *e1* and *e2* , compute them in parallel and return the pair of results
+
+```scala
+parallel(e1, e2)
+```
+
+### 1.2.2. Example: computing p-norm
+
+  Parallelism could be done by a recursive algorithm.
+
+### 1.2.3. Signature of parallel
+
+```scala
+def parallel[A, B](taskA: =>A, taskB: =>B): (A, B) = {...}
+```
+
+  - returns the same value as given
+  - benefit: *parallel(a, b)* can be faster than *(a, b)*
+  - it takse its arguments as *by name*, indicated with *=> A* and *=> B*
+
+  For parallelism, need to pass unevaluated computations(call *by name*).
+
+### 1.2.4. Underlying Hardware Architecture Affects Performance
+
+  Memory is bottleneck. Multi-prossecors share the memory space of RAM. The computation time can not be less that the time it takes to fetch the data from memory to processors.
+
+### 1.2.5. Combining computations of different length with parallel
+
+```scala
+val(v1, v2) = parallel(e1, e2)
+```
+The minimum time that this parallel expression time is the maximum of the running times of *e1* and *e2*.
+
+### 1.2.6. Example: Monte Carlo Method to Estimate $\pi$
+
+## 1.3. First-Class Tasks
+
+### 1.3.1. More flexible construct for parallel computation
+
+```scala
+val(v1, v2) = parallel(e1, e2)
+```
+
+  alternatively using *task* construct:
+
+```scala
+val t1 = task(e1)
+val t2 = task(e2)
+val v1 = t1.join
+val v2 = t2.join
+```
+
+  *t = task e* starts computation *e* "in the background"
+
+  - *t* is a *task*, which performs computation of *e*
+  - current computation proceeds in parallel with *t*
+  - to obtain the result of *e*, use *t.join*
+  - *t.join* blocks and waits until the results is computed
+  - subsequent *t.join* calls quickly return the same result
+
+### 1.3.2. Task interface
+
+  Here is a minimal interface for tasks:
+
+```scala
+def task(c: => A): Task[A]
+
+trait Task[A] {
+  def join: A
+}
+```
+
+  *task* and *join* establish maps between computations and tasks
+
+  In terms of the value computed the equation *task(e).join==e* holds. We can omit writing *.join* if we also define an *implicit* conversion:
+
+```scala
+implicit def getJoin[T](x: Task[T]): T = x.join
+```
+
+## 1.4. How Fast are Parallel Programs
+
+  **Performance** : a key motivation for paralellism
+
+  How to estimate it?
+
+  - empirical measurement
+  - asymptotic analysis
+
+  Asymptotic analysis is important to understand how algorithms scale when:
+
+  - inputs get larger
+  - we have more hardware parallelism available
+
+  We examine worst-cast(as opposed to average) bounds.
+
+### 1.4.1. Work and depth
+
+  We would like to speak about the asymptotic complexity of parallel code
+  
+  - but this depends on available parallel resources
+  - we introduce two measures for a program
+  
+  Work *W(e)* : number of steps *e* would take if there was no parallelism
+  
+  - this is simply the sequential execution time
+  - treat all *parallel(e1, e2)* as *(e1, e2)*
+  
+  Depth *D(e)* : number of steps if we had unbounded parallelism
+
+  - we take maximum of running times for arguments of parallel
+
+### 1.4.2. Rules for depth and work
+
+  Key rules are:
+
+  - *W(parallel(e1, e2)) = W(e1) + W(e2) + c2*
+  - *D(parallel(e1, e2)) = max(D(e1), D(e2)) + c1*
+  
+  If we divide work in equal parts, for depth it counts only once!
+
+  For parts of code where we do not use *parallel* explicityly, we must add up costs. For function call or operation *f(e1, ..., en)* :
+
+  - *W(f(e1, ..., en)) = W(e1) + ... + W(en) + W(f)(v1, ..., vn)*
+  - *D(f(e1, ..., en)) = D(e1) + ... + D(en) + D(f)(v1, ..., vn)*
+  
+  *vi* denotes values of *ei*, if *f* is primitive operation on *integers*, the *W(f)* and *D(f)* ane constant function, regardless of *vi*.
+
+  Note: we assume(reasonably) that constants are such that *D* $\le$ *W*.
+
+### 1.4.3. Computing time bound for given parallelism
+
+  Suppose we know *W(e)* and *D(e)* and our platfrom has *P* parallel threads.
+
+  It is reasonalbe to use this estimate for running time:
+
+  *D(e) + W(e) / P*
+
+### 1.4.4. Parallelism and Amdahl's Law
+
+  Suppose that we have two parts of a sequential computaion:
+
+  - part1 takes fraction *f* of the computation time, e.g., 40%.
+  - part2 takes the remaining *1 - f* fraction of time, e.g., 60%, and we can speed it up.
+  
+  If we make part2 *P* times faster the speedup is
+
+  *1 / (f + (1 - f) / P)*
+
+  For *P = 100* and *f = 0.4* we obtain 2.46. Even if we speed the second part infinitely, we can obtain at most *1 / 0.4 = 2.5* speed up.
+
+## 1.5. Benchmarking Parallel Programs
+
+### 1.5.1. Testing and Benchmarking
+
+  **Testing** : ensures that parts of the program are behaving according to the intended behavior.
+  
+  **Benchmarking** : computes performance metrics for parts of the program.
+
+  Typically, *testing* yields a binary output - a program or its part is either correct or not. *Benchmarking* usually yields a continous value, which denotes the extent to which the program is correct.
+
+### 1.5.2. Benchmarking Parallel Programs
+  
+  - Performance benefits are the main reason why we are writing parallel programs in the first place.
+  - Benchmarking parallel programs is even more important than benchmarking sequential programs.
+
+### 1.5.3. Performance Factors
+
+  Performance(specifically, running time) is subject to many factors:
+
+  - processor speed
+  - number of proce ssors
+  - memory access latency and throughput(affectc contention)
+  - cache behavior(e.g. false sharing, associativity effects)
+  - running behavior(e.g. garbage collection, JIT complication, thread scheduling)
+
+  See [What Every Programmer Should Know About Memory, by Ulrich Drepper][WEPSKAM].
+
+### 1.5.4. Measurement Methodologies
+
+  Measuring performance is difficult - usually, the a performance metric is a random variable.
+
+  - multiple repetions
+  - statistical treatment: mean and variance
+  - eliminating outliers
+  - ensuring steady state(warm-up)
+  - preventing anomalies(GC, JIT complication, aggressive optimizations)
+  
+  See [Statistically Rigorous Java Performance Evaluation, by Georges, Buytaert and Eechhout][SRJPE].
+
+### 1.5.5. ScalaMeter
+
+  ScalaMeter is a benchmarking and performance regression testing framework of JVM.
+
+  -  performance regression testing: comparing performance of the current program run against known previous runs
+  -  benchmarking: measuring performance of the current(part of the) program
+  
+### 1.5.6. Using ScalaMeter
+
+  Add ScalaMeter as a dependency:
+
+```
+libraryDependencies += "com.storm-enroute" %% "scalameter-core" % "0.6"
+```
+
+  Import the contents of the ScalaMeter package, and measure:
+
+```scala
+import org.ScalaMeter._
+
+val time = measure {
+  (0 until 1000000).toArray
+}
+
+println(s"Array initialization time: $time ms")
+```
+
+### 1.5.7. ScalaMeter Warmers
+
+  Usually, we want to measure steady state program performance.
+
+  ScalaMeter Warmer objects run the benchmarked code until detecting steady state.
+
+```scala
+import org.scalameter._
+
+val time = withWarmer(new Warmer.Default) measure {
+  (0 until 1000000).toArray
+}
+```
+
+### 1.5.8. ScalaMeter Measures
+
+  - *Measure.Default* : plain running time
+  - *IgnoringGC* : running time without GC pauses
+  - *OutlierElimination* : remove statistical outliers
+  - *MemoryFootprint* : memory footprint of an object
+  - *GarbageCollectionCycles* : total number of GC paurses
+  - newer ScalaMeter version can also measure method invocation counts and boxing counts
+
+# 2. Week 2 Task-Parallelism
+# 3. Week 3 Data-ParaLLelism
+# 4. Week 4 Data Structures
+
+
+[WEPSKAM]: https://www.akkadia.org/drepper/cpumemory.pdf
+[SRJPE]: https://dri.es/files/oopsla07-georges.pdf
