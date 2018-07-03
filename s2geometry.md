@@ -26,7 +26,5 @@ Some tricks:
     -- Found PythonLibs: /usr/lib/x86_64-linux-gnu/libpython3.6m.so (found version "3.6.5") 
     ...
     ```
-    One possible way to solvle this is to create a virtual environment for python and then do `make`
-    
-
-  
+    One possible way to solvle this is to create a virtual environment for python and then do `make`. Then do `make test` and `pywraps2_test` will pass.
+   - `make install`, c.f., [libs2.so import error](https://stackoverflow.com/questions/45439754/importerror-libs2-so-cannot-open-shared-object-file-no-such-file-or-directory)
