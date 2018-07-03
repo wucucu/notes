@@ -32,7 +32,7 @@ Some tricks:
     ```
     Then do `make test` and `pywraps2_test` will pass.
     
-    - C.f., [libs2.so import error](https://stackoverflow.com/questions/45439754/importerror-libs2-so-cannot-open-shared-object-file-no-such-file-or-directory). 
+    - C.f., [libs2.so import error solution on stckoverflow](https://stackoverflow.com/questions/45439754/importerror-libs2-so-cannot-open-shared-object-file-no-such-file-or-directory). 
     Because of ubuntu system, change the `CMAKE_INSTALL_PREFIX:PATH=/usr` in the `CMakeCache.txt` file after do `make`, then do `sudo make install`.
     Copy module files to the virtual environment.
     ```shell
