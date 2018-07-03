@@ -7,7 +7,7 @@
     - [Spark 1.6.3](https://spark.apache.org/docs/1.6.3/index.html)
     - [1.6.3 Spark Standalone Mode](https://spark.apache.org/docs/1.6.3/spark-standalone.html)
 
-## Try [aerosolve/airlearner/](https://github.com/airbnb/aerosolve/tree/master/airlearner)
+## ~~Try [aerosolve/airlearner/](https://github.com/airbnb/aerosolve/tree/master/airlearner)~~
 
 0. install hadoop 2.6.x 
     - [Apache Hadoop 2.6.5 Setting up a Single Node Cluster](http://hadoop.apache.org/docs/r2.6.5/hadoop-project-dist/hadoop-common/SingleCluster.html)
