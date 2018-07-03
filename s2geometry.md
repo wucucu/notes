@@ -4,8 +4,7 @@ useful links:
 - [S2Geometry](http://s2geometry.io/)
 - [google/s2geometry](https://github.com/google/s2geometry), c++ implementations with a python api supported by swig, a repo on github
 - [高效的多维空间点索引算法 — Geohash 和 Google S2](https://halfrost.com/go_spatial_search/), an introdutioin to geohash and s2 in Chinese. 
-- [Google S2 with Python & Jupyter](https://blog.nobugware.com/post/2018/google-s2-python-jupyter/).
-  - [python-visualization/folium] is used to visualize a map demo application
+- [Google S2 with Python & Jupyter](https://blog.nobugware.com/post/2018/google-s2-python-jupyter/). python-visualization/folium] is used to visualize a map demo application
 
 
 ## installation
@@ -33,7 +32,9 @@ Some tricks:
     ```
     Then do `make test` and `pywraps2_test` will pass.
     
-    - `make install`, c.f., [libs2.so import error](https://stackoverflow.com/questions/45439754/importerror-libs2-so-cannot-open-shared-object-file-no-such-file-or-directory). Copy module files to the virtual environment.
+    - C.f., [libs2.so import error](https://stackoverflow.com/questions/45439754/importerror-libs2-so-cannot-open-shared-object-file-no-such-file-or-directory). 
+    Because of ubuntu system, change the `CMAKE_INSTALL_PREFIX:PATH=/usr` in the `CMakeCache.txt` file after do `make`, then do `sudo make install`.
+    Copy module files to the virtual environment.
     ```shell
     $ cp /usr/lib/python3.6/site-packages/pywraps2.py ~/py-env/lib/python3.6/site-packages
     $ cp /usr/lib/python3.6/site-packages/_pywraps2.so ~/py-env/lib/python3.6/site-packages
