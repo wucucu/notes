@@ -5,6 +5,7 @@ useful links:
 - [google/s2geometry](https://github.com/google/s2geometry), c++ implementations with a python api supported by swig, a repo on github
 - [高效的多维空间点索引算法 — Geohash 和 Google S2](https://halfrost.com/go_spatial_search/), an introdutioin to geohash and s2 in Chinese. The blog lays in the github repo [halfrost/Halfrost-Field](https://github.com/halfrost/Halfrost-Field).
 - [Google S2 with Python & Jupyter](https://blog.nobugware.com/post/2018/google-s2-python-jupyter/). [python-visualization/folium] is used to visualize a map demo application
+- [s2 c++ api docus](http://s2sphere.readthedocs.io/en/latest/cpp.html), extracted from the original S2 geometry library source code and included in `s2sphere` (a python implementation of s2) documentations.
 
 
 ## installation
