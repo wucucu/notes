@@ -21,7 +21,6 @@ Some tricks:
     
     - Make sure the `PythonInterp` and `PythonLibs` version consistent. There may still be some binding issues of the CMake setting files of the repo currently, c.f., [#6](https://github.com/google/s2geometry/issues/6) and [#34](https://github.com/google/s2geometry/pull/34). If following happens where the interpreter version is `2.7.12` and the library is `3.6.5`, `pywraps2` module will not be imported correctly 
     ```shell
-    $ make
     ...
     -- Found PythonInterp: /usr/bin/python (found version "2.7.12") 
     -- Found PythonLibs: /usr/lib/x86_64-linux-gnu/libpython3.6m.so (found version "3.6.5") 
