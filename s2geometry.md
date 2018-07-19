@@ -41,3 +41,6 @@ Some tricks:
     $ cp /usr/lib/python3.6/site-packages/_pywraps2.so ~/py-env/lib/python3.6/site-packages
     ```
     Then `pywraps2` can be imported in the virtual environment.
+- Use python api
+    - checkout test file, refer to [pywraps2_test.py](https://github.com/google/s2geometry/blob/master/src/python/pywraps2_test.py)
+    - [s2 level statistics](http://s2geometry.io/resources/s2cell_statistics), c.f., [geohash statistics](https://en.wikipedia.org/wiki/Geohash)
