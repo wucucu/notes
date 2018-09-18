@@ -18,3 +18,8 @@ then in first commit it shows
 ```
 fatal: user.useConfigOnly set but no name given
 ```
+
+# git Create multiple identities for Mac OSX, GitBash, and Linux
+(https://stackoverflow.com/questions/21139926/how-to-maintain-multiple-bitbucket-accounts-with-multiple-ssh-keys-in-the-same-s)
+
+This is useful when you want to set up ssh for different accounts from a same remote service provider, like, bitbucket.org.
