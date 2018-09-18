@@ -23,3 +23,5 @@ fatal: user.useConfigOnly set but no name given
 (https://stackoverflow.com/questions/21139926/how-to-maintain-multiple-bitbucket-accounts-with-multiple-ssh-keys-in-the-same-s)
 
 This is useful when you want to set up ssh for different accounts from a same remote service provider, like, bitbucket.org.
+
+Notice, after setup, we need to change the server name in the config setting remote.origin.url, refer to the last part of the first anwser.
