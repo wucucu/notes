@@ -1,7 +1,9 @@
 TIPS
 ----
 
-# git username and email
+# git
+
+## username and email
 specify different username/email for each repo
 (https://stackoverflow.com/questions/4220416/can-i-specify-multiple-users-for-myself-in-gitconfig)
 
@@ -20,7 +22,7 @@ then in first commit it shows
 fatal: user.useConfigOnly set but no name given
 ```
 
-# git remote server ssh 
+## remote server ssh 
 create multiple identities for Mac OSX, GitBash, and Linux
 (https://stackoverflow.com/questions/21139926/how-to-maintain-multiple-bitbucket-accounts-with-multiple-ssh-keys-in-the-same-s)
 
@@ -28,6 +30,11 @@ This is useful when you want to set up ssh for different accounts from a same re
 
 Notice, after setup, we need to change the server name in the config setting remote.origin.url, refer to the last part of the first anwser.
 
-# git remote branch
+## remote branch
  create a remote branch from a local branch or vice versa
 (https://stackoverflow.com/questions/11266478/git-add-remote-branch)
+
+
+# linux shell
+## `find` usage
+(https://alvinalexander.com/unix/edu/examples/find.shtml)
