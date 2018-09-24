@@ -34,6 +34,12 @@ Notice, after setup, we need to change the server name in the config setting rem
  create a remote branch from a local branch or vice versa
 (https://stackoverflow.com/questions/11266478/git-add-remote-branch)
 
+ remove remote/local branch
+ ```
+ $ git push -d origin <branch_name>
+ $ git branch -d <branch_name>
+ ```
+
 
 # linux shell
 ## `find` usage
