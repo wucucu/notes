@@ -52,6 +52,7 @@ find . -name "foo.*"
 ```
 
 ### remove all .bak files from a project
+(https://askubuntu.com/questions/377438/how-can-i-recursively-delete-all-files-of-a-specific-extension-in-the-current-di)
 ```bash
 find . -name "*.bak" -type f
 find . -name "*.bak" -type f -delete
