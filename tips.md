@@ -44,3 +44,18 @@ Notice, after setup, we need to change the server name in the config setting rem
 # linux shell
 ## `find` usage
 (https://alvinalexander.com/unix/edu/examples/find.shtml)
+
+
+### basics
+```bash
+find . -name "foo.*" 
+```
+
+### remove all .bak files from a project
+```bash
+find . -name "*.bak" -type f
+find . -name "*.bak" -type f -delete
+```
+
+
+
