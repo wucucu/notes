@@ -58,5 +58,10 @@ find . -name "*.bak" -type f
 find . -name "*.bak" -type f -delete
 ```
 
+## echo file
+### cat multiple files and print filename as header
+(https://stackoverflow.com/questions/5917413/cat-multiple-files-but-include-filename-as-headers)
+
+
 
 
