@@ -12,6 +12,9 @@ try to config git that be able to push from local terminal and the user/email wa
     - as ~/.ssh/is_rsa.pub already exits, add it to github profile ssh setting
 - user/email staff: https://help.github.com/articles/connecting-to-github-with-ssh/
     - verify local computer git config user.email information in the github profile
+    
+### Using different SSH keys for multiple Bitbucket accounts
+(https://developer.atlassian.com/blog/2016/04/different-ssh-keys-multiple-bitbucket-accounts/)
 
 ### specify different username/email for each repo
 (https://stackoverflow.com/questions/4220416/can-i-specify-multiple-users-for-myself-in-gitconfig)
