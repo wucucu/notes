@@ -3,10 +3,20 @@ TIPS
 
 # git
 
-## username and email
-specify different username/email for each repo
+  
+## username/email 
+
+### the user/email showed in the github
+try to config git that be able to push from local terminal and the user/email was showing as wucucu/~
+- ssh staff: https://help.github.com/articles/connecting-to-github-with-ssh/
+    - as ~/.ssh/is_rsa.pub already exits, add it to github profile ssh setting
+- user/email staff: https://help.github.com/articles/connecting-to-github-with-ssh/
+    - verify local computer git config user.email information in the github profile
+
+###specify different username/email for each repo
 (https://stackoverflow.com/questions/4220416/can-i-specify-multiple-users-for-myself-in-gitconfig)
 
+###force to set username/email manually
 Version ≥ 2.8.0, force to set username and password for a initial git repo
 ```
 [user]
