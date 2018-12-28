@@ -13,10 +13,10 @@ try to config git that be able to push from local terminal and the user/email wa
 - user/email staff: https://help.github.com/articles/connecting-to-github-with-ssh/
     - verify local computer git config user.email information in the github profile
 
-###specify different username/email for each repo
+### specify different username/email for each repo
 (https://stackoverflow.com/questions/4220416/can-i-specify-multiple-users-for-myself-in-gitconfig)
 
-###force to set username/email manually
+### force to set username/email manually
 Version ≥ 2.8.0, force to set username and password for a initial git repo
 ```
 [user]
