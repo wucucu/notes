@@ -77,4 +77,25 @@ find . -name "*.bak" -type f -delete
 
 
 
+# jupyter notebook
+## autoreload
 
+(https://ipython.org/ipython-doc/3/config/extensions/autoreload.html)
+IPython extension to reload modules before executing user code.
+autoreload reloads modules automatically before entering the execution of code typed at the IPython prompt.
+
+```python
+In [1]: %load_ext autoreload
+
+In [2]: %autoreload 2
+
+In [3]: from foo import some_function
+
+In [4]: some_function()
+Out[4]: 42
+
+In [5]: # open foo.py in an editor and change some_function to return 43
+
+In [6]: some_function()
+Out[6]: 43
+```
