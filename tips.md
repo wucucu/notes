@@ -17,7 +17,8 @@ TIPS
     - [2.2.1. `cat` multiple files and print filename as header](#221-cat-multiple-files-and-print-filename-as-header)
 - [3. jupyter notebook](#3-jupyter-notebook)
   - [3.1. `autoreload`](#31-autoreload)
-
+- [4. Django](#4-django)
+  - [4.1. run python script in Django shell](#41-run-python-script-in-django-shell)
 
 # 1. git
 
@@ -116,3 +117,7 @@ In [5]: # open foo.py in an editor and change some_function to return 43
 In [6]: some_function()
 Out[6]: 43
 ```
+
+# 4. Django
+## 4.1. run python script in Django shell
+(https://stackoverflow.com/questions/16853649/how-to-execute-a-python-script-from-the-django-shell)
