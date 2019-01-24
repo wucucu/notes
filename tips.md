@@ -19,6 +19,8 @@ TIPS
   - [3.1. `autoreload`](#31-autoreload)
 - [4. Django](#4-django)
   - [4.1. run python script in Django shell](#41-run-python-script-in-django-shell)
+- [5. PostgreSQL](#5-postgresql)
+  - [5.1. where date condition](#51-where-date-condition)
 
 # 1. git
 
@@ -121,3 +123,11 @@ Out[6]: 43
 # 4. Django
 ## 4.1. run python script in Django shell
 (https://stackoverflow.com/questions/16853649/how-to-execute-a-python-script-from-the-django-shell)
+
+
+# 5. PostgreSQL
+## 5.1. where date condition
+
+```sql
+SELECT * FROM t where d BETWEEN '2019-01-01' AND CURRENT_DATE;
+```
