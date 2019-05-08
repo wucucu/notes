@@ -3,8 +3,7 @@ Parallel Programming
 
 These are some notes for the 3rd course of Scala Specialization on Cousera.
 
-<!-- TOC -->
-
+- [Parallel Programming](#parallel-programming)
 - [1. Week 1 Basics](#1-week-1-basics)
   - [1.1. JVM and parallelism](#11-jvm-and-parallelism)
     - [1.1.1. Process](#111-process)
@@ -13,7 +12,7 @@ These are some notes for the 3rd course of Scala Specialization on Cousera.
     - [1.1.4. Example: Starting Threads](#114-example-starting-threads)
     - [1.1.5. Atomicity](#115-atomicity)
     - [1.1.6. The Synchronized Block](#116-the-synchronized-block)
-    - [1.1.7. Composition whith the synchronized block](#117-composition-whith-the-synchronized-block)
+    - [1.1.7. Composition with the synchronized block](#117-composition-with-the-synchronized-block)
     - [1.1.8. Deadlocks](#118-deadlocks)
     - [1.1.9. Memory Model](#119-memory-model)
     - [1.1.10. Summary](#1110-summary)
@@ -23,7 +22,7 @@ These are some notes for the 3rd course of Scala Specialization on Cousera.
     - [1.2.3. Signature of parallel](#123-signature-of-parallel)
     - [1.2.4. Underlying Hardware Architecture Affects Performance](#124-underlying-hardware-architecture-affects-performance)
     - [1.2.5. Combining computations of different length with parallel](#125-combining-computations-of-different-length-with-parallel)
-    - [1.2.6. Example: Monte Carlo Method to Estimate $\pi$](#126-example-monte-carlo-method-to-estimate-\pi)
+    - [1.2.6. Example: Monte Carlo Method to Estimate $\pi$](#126-example-monte-carlo-method-to-estimate-pi)
   - [1.3. First-Class Tasks](#13-first-class-tasks)
     - [1.3.1. More flexible construct for parallel computation](#131-more-flexible-construct-for-parallel-computation)
     - [1.3.2. Task interface](#132-task-interface)
@@ -45,13 +44,10 @@ These are some notes for the 3rd course of Scala Specialization on Cousera.
 - [3. Week 3 Data-ParaLLelism](#3-week-3-data-parallelism)
 - [4. Week 4 Data Structures](#4-week-4-data-structures)
 
-<!-- /TOC -->
-
-
 # 1. Week 1 Basics
 ## 1.1. JVM and parallelism
 
-  We assume 
+  We assume:
 
   - Our parallel programming model applied for **multicore** or **multiprocessor** systems with shared memory.
   - Operating system and the JVM as the underlying runtim environments.
@@ -68,7 +64,7 @@ These are some notes for the 3rd course of Scala Specialization on Cousera.
 
 ### 1.1.2. Threads
 
-  **Thread** : Each process can contian multiple independent concurrency units called **threads**.
+  **Thread** : Each process can contain multiple independent concurrency units called **threads**.
 
   Threads can be started from within the same program, and they share the same memory address space.
 
@@ -79,11 +75,12 @@ These are some notes for the 3rd course of Scala Specialization on Cousera.
   Each JVM process starts with a **main thread**.
 
   To start additional threads:
+  
   1. Define a Thread subclass.
   2. Instantiate a new Thread object.
-  3. Call *start* method on the Thread object.
+  3. Call `start` method on the Thread object.
 
-  The Thread subclass defines the code that the thread will eecute. The same custom *Thread* subclass can be used to start multiple threads.
+  The Thread subclass defines the code that the thread will excute. The same custom `Thread` subclass can be used to start multiple threads.
 
 ### 1.1.4. Example: Starting Threads
 
@@ -195,7 +192,7 @@ Vector(1, 7, 9, 11, 13, 14, 15, 16, 17, 18)
 
 ### 1.1.6. The Synchronized Block
 
-  The *sychronized* block is used to achiece atomicity. Code block after a *synchronized* call on an object x is never executed by two threads at the same time.
+  The `synchronized` block is used to achieve atomicity. Code block after a `synchronized` call on an object x is never executed by two threads at the same time.
 
 ```scala
  //The synchronized method must be invoded on an instance of some object.
@@ -221,6 +218,7 @@ t
 startThread
 startThread
 ```
+
 ```
 Vector(2, 3, 4, 5, 6, 7, 8, 9, 10, 11)
 Vector(1, 12, 13, 14, 15, 16, 17, 18, 19, 20)
@@ -229,10 +227,10 @@ startThread: ()Thread
 res0: Thread = Thread[Thread-3,5,]
 ```
 
-  Different threads use the synchonized block to agrre on unique values. 
+  Different threads use the synchronized block to agree on unique values.
   The synchronized block is an example of a synchronization primitive.
 
-### 1.1.7. Composition whith the synchronized block
+### 1.1.7. Composition with the synchronized block
   
   Invocations of the synchronized block can nest.
 
@@ -332,21 +330,23 @@ s.join()
 
   Java Memory Model - the memory model for the JVM
 
-  Following is two rules of JMM(a subset of the whole rules) which should be remembered in this course:
-  1. Thwo threads writing to separate locations in memory do not need synchronization.
-  2. A thread X that calls *join* method on another thread Y is guaranteed to ovserve all the writes by thread Y after *join* returns.
+  Following is two rules of JVM(a subset of the whole rules) which should be remembered in this course:
+
+  1. Two threads writing to separate locations in memory do not need synchronization.
+  2. A thread X that calls `join` method on another thread Y is guaranteed to observe all the writes by thread Y after `join` returns.
 
 ### 1.1.10. Summary
 
   The parallelism constructs in the remainder of the course are implemented in terms of:
+
   - threads
-  - synchronization primitives such as *synchronized* 
+  - synchronization primitives such as `synchronized`
 
 ## 1.2. Running Computations in Parallel
 
 ### 1.2.1. Basic parallel construct
   
-  Given expressiongs *e1* and *e2* , compute them in parallel and return the pair of results
+  Given expressions `e1` and `e2` , compute them in parallel and return the pair of results
 
 ```scala
 parallel(e1, e2)
@@ -363,21 +363,22 @@ def parallel[A, B](taskA: =>A, taskB: =>B): (A, B) = {...}
 ```
 
   - returns the same value as given
-  - benefit: *parallel(a, b)* can be faster than *(a, b)*
-  - it takse its arguments as *by name*, indicated with *=> A* and *=> B*
+  - benefit: `parallel(a, b)` can be faster than `(a, b)`
+  - it takes its arguments as `by name`, indicated with `=> A` and `=> B`
 
-  For parallelism, need to pass unevaluated computations(call *by name*).
+  For parallelism, need to pass unevaluated computations(call `by name`).
 
 ### 1.2.4. Underlying Hardware Architecture Affects Performance
 
-  Memory is bottleneck. Multi-prossecors share the memory space of RAM. The computation time can not be less that the time it takes to fetch the data from memory to processors.
+  Memory is bottleneck. Multi-processors share the memory space of RAM. The computation time can not be less that the time it takes to fetch the data from memory to processors.
 
 ### 1.2.5. Combining computations of different length with parallel
 
 ```scala
 val(v1, v2) = parallel(e1, e2)
 ```
-The minimum time that this parallel expression time is the maximum of the running times of *e1* and *e2*.
+
+The minimum time that this parallel expression time is the maximum of the running times of `e1` and `e2`.
 
 ### 1.2.6. Example: Monte Carlo Method to Estimate $\pi$
 
@@ -389,7 +390,7 @@ The minimum time that this parallel expression time is the maximum of the runnin
 val(v1, v2) = parallel(e1, e2)
 ```
 
-  alternatively using *task* construct:
+  alternatively using `task` construct:
 
 ```scala
 val t1 = task(e1)
@@ -398,13 +399,13 @@ val v1 = t1.join
 val v2 = t2.join
 ```
 
-  *t = task e* starts computation *e* "in the background"
+  `t = task e` starts computation `e` "in the background"
 
-  - *t* is a *task*, which performs computation of *e*
-  - current computation proceeds in parallel with *t*
-  - to obtain the result of *e*, use *t.join*
-  - *t.join* blocks and waits until the results is computed
-  - subsequent *t.join* calls quickly return the same result
+  - `t` is a `task`, which performs computation of `e`
+  - current computation proceeds in parallel with `t`
+  - to obtain the result of `e`, use `t.join`
+  - `t.join` blocks and waits until the results is computed
+  - subsequent `t.join` calls quickly return the same result
 
 ### 1.3.2. Task interface
 
@@ -418,9 +419,9 @@ trait Task[A] {
 }
 ```
 
-  *task* and *join* establish maps between computations and tasks
+  `task` and `join` establish maps between computations and tasks
 
-  In terms of the value computed the equation *task(e).join==e* holds. We can omit writing *.join* if we also define an *implicit* conversion:
+  In terms of the value computed the equation `task(e).join==e` holds. We can omit writing `.join` if we also define an `implicit` conversion:
 
 ```scala
 implicit def getJoin[T](x: Task[T]): T = x.join
@@ -449,12 +450,12 @@ implicit def getJoin[T](x: Task[T]): T = x.join
   - but this depends on available parallel resources
   - we introduce two measures for a program
   
-  Work *W(e)* : number of steps *e* would take if there was no parallelism
+  Work `W(e)` : number of steps `e` would take if there was no parallelism
   
   - this is simply the sequential execution time
-  - treat all *parallel(e1, e2)* as *(e1, e2)*
+  - treat all `parallel(e1, e2)` as `(e1, e2)`
   
-  Depth *D(e)* : number of steps if we had unbounded parallelism
+  Depth `D(e)` : number of steps if we had unbounded parallelism
 
   - we take maximum of running times for arguments of parallel
 
@@ -462,40 +463,40 @@ implicit def getJoin[T](x: Task[T]): T = x.join
 
   Key rules are:
 
-  - *W(parallel(e1, e2)) = W(e1) + W(e2) + c2*
-  - *D(parallel(e1, e2)) = max(D(e1), D(e2)) + c1*
+  - `W(parallel(e1, e2)) = W(e1) + W(e2) + c2`
+  - `D(parallel(e1, e2)) = max(D(e1), D(e2)) + c1`
   
   If we divide work in equal parts, for depth it counts only once!
 
-  For parts of code where we do not use *parallel* explicityly, we must add up costs. For function call or operation *f(e1, ..., en)* :
+  For parts of code where we do not use `parallel` explicityly, we must add up costs. For function call or operation `f(e1, ..., en)` :
 
-  - *W(f(e1, ..., en)) = W(e1) + ... + W(en) + W(f)(v1, ..., vn)*
-  - *D(f(e1, ..., en)) = D(e1) + ... + D(en) + D(f)(v1, ..., vn)*
+  - `W(f(e1, ..., en)) = W(e1) + ... + W(en) + W(f)(v1, ..., vn)`
+  - `D(f(e1, ..., en)) = D(e1) + ... + D(en) + D(f)(v1, ..., vn)`
   
-  *vi* denotes values of *ei*, if *f* is primitive operation on *integers*, the *W(f)* and *D(f)* ane constant function, regardless of *vi*.
+  `vi` denotes values of `ei`, if `f` is primitive operation on `integers`, the `W(f)` and `D(f)` ane constant function, regardless of `vi`.
 
-  Note: we assume(reasonably) that constants are such that *D* $\le$ *W*.
+  Note: we assume(reasonably) that constants are such that `D` $\le$ `W`.
 
 ### 1.4.3. Computing time bound for given parallelism
 
-  Suppose we know *W(e)* and *D(e)* and our platfrom has *P* parallel threads.
+  Suppose we know `W(e)` and `D(e)` and our platfrom has `P` parallel threads.
 
   It is reasonalbe to use this estimate for running time:
 
-  *D(e) + W(e) / P*
+  `D(e) + W(e) / P`
 
 ### 1.4.4. Parallelism and Amdahl's Law
 
   Suppose that we have two parts of a sequential computaion:
 
-  - part1 takes fraction *f* of the computation time, e.g., 40%.
-  - part2 takes the remaining *1 - f* fraction of time, e.g., 60%, and we can speed it up.
+  - part1 takes fraction `f` of the computation time, e.g., 40%.
+  - part2 takes the remaining `1 - f` fraction of time, e.g., 60%, and we can speed it up.
   
-  If we make part2 *P* times faster the speedup is
+  If we make part2 `P` times faster the speedup is
 
-  *1 / (f + (1 - f) / P)*
+  `1 / (f + (1 - f) / P)`
 
-  For *P = 100* and *f = 0.4* we obtain 2.46. Even if we speed the second part infinitely, we can obtain at most *1 / 0.4 = 2.5* speed up.
+  For `P = 100` and `f = 0.4` we obtain 2.46. Even if we speed the second part infinitely, we can obtain at most `1 / 0.4 = 2.5` speed up.
 
 ## 1.5. Benchmarking Parallel Programs
 
