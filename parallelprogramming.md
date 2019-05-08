@@ -38,8 +38,9 @@ These are some notes for the 3rd course of Scala Specialization on Cousera.
     - [1.5.4. Measurement Methodologies](#154-measurement-methodologies)
     - [1.5.5. ScalaMeter](#155-scalameter)
     - [1.5.6. Using ScalaMeter](#156-using-scalameter)
-    - [1.5.7. ScalaMeter Warmers](#157-scalameter-warmers)
-    - [1.5.8. ScalaMeter Measures](#158-scalameter-measures)
+    - [1.5.7. JVM Warmup](#157-jvm-warmup)
+    - [1.5.8. ScalaMeter Warmers](#158-scalameter-warmers)
+    - [1.5.9. ScalaMeter Measures](#159-scalameter-measures)
 - [2. Week 2 Task-Parallelism](#2-week-2-task-parallelism)
 - [3. Week 3 Data-ParaLLelism](#3-week-3-data-parallelism)
 - [4. Week 4 Data Structures](#4-week-4-data-structures)
@@ -455,7 +456,7 @@ implicit def getJoin[T](x: Task[T]): T = x.join
   - this is simply the sequential execution time
   - treat all `parallel(e1, e2)` as `(e1, e2)`
   
-  Depth `D(e)` : number of steps if we had unbounded parallelism
+  Depth $D(e)$ : number of steps if we had unbounded parallelism
 
   - we take maximum of running times for arguments of parallel
 
@@ -463,19 +464,19 @@ implicit def getJoin[T](x: Task[T]): T = x.join
 
   Key rules are:
 
-  - `W(parallel(e1, e2)) = W(e1) + W(e2) + c2`
-  - `D(parallel(e1, e2)) = max(D(e1), D(e2)) + c1`
+  - $W(parallel(e1, e2)) = W(e1) + W(e2) + c2$
+  - $D(parallel(e1, e2)) = max(D(e1), D(e2)) + c1$
   
   If we divide work in equal parts, for depth it counts only once!
 
-  For parts of code where we do not use `parallel` explicityly, we must add up costs. For function call or operation `f(e1, ..., en)` :
+  For parts of code where we do not use `parallel` explicityly, we must add up costs. For function call or operation $f(e1, ..., en)$:
 
-  - `W(f(e1, ..., en)) = W(e1) + ... + W(en) + W(f)(v1, ..., vn)`
-  - `D(f(e1, ..., en)) = D(e1) + ... + D(en) + D(f)(v1, ..., vn)`
+  - $W(f(e1, ..., en)) = W(e1) + ... + W(en) + W(f)(v1, ..., vn)$
+  - $D(f(e1, ..., en)) = D(e1) + ... + D(en) + D(f)(v1, ..., vn)$
   
-  `vi` denotes values of `ei`, if `f` is primitive operation on `integers`, the `W(f)` and `D(f)` ane constant function, regardless of `vi`.
+  $vi$ denotes values of $ei$, if $f$ is primitive operation on *integers*, the $W(f)$ and $D(f)$ ane constant function, regardless of $vi$.
 
-  Note: we assume(reasonably) that constants are such that `D` $\le$ `W`.
+  Note: we assume(reasonably) that constants are such that $D \le W$.
 
 ### 1.4.3. Computing time bound for given parallelism
 
@@ -564,7 +565,16 @@ val time = measure {
 println(s"Array initialization time: $time ms")
 ```
 
-### 1.5.7. ScalaMeter Warmers
+### 1.5.7. JVM Warmup
+
+  When a JVM programs starts, it undergoes a period of warmup, after which it achieves its maximum performance.
+
+  1. first, the program is *interpreted*
+  2. then, parts of the program are compiled into machine code
+  3. later, the JVM may choose to apply additional dynamic optimizations
+  4. eventually, the program reaches *steady state*
+
+### 1.5.8. ScalaMeter Warmers
 
   Usually, we want to measure steady state program performance.
 
@@ -578,14 +588,22 @@ val time = withWarmer(new Warmer.Default) measure {
 }
 ```
 
-### 1.5.8. ScalaMeter Measures
+### 1.5.9. ScalaMeter Measures
 
-  - *Measure.Default* : plain running time
-  - *IgnoringGC* : running time without GC pauses
-  - *OutlierElimination* : remove statistical outliers
-  - *MemoryFootprint* : memory footprint of an object
-  - *GarbageCollectionCycles* : total number of GC paurses
+  - `Measure.Default`: plain running time
+  - `IgnoringGC`: running time without GC pauses
+  - `OutlierElimination`: remove statistical outliers
+  - `MemoryFootprint`: memory footprint of an object
+  - `GarbageCollectionCycles`: total number of GC pauses
   - newer ScalaMeter version can also measure method invocation counts and boxing counts
+
+```scala
+import org.scalameter._
+
+val time = withMeasurer(new Measurer.MemoryFootprint) measure {
+  (0 until 1000000).toArray
+}
+```
 
 # 2. Week 2 Task-Parallelism
 # 3. Week 3 Data-ParaLLelism
