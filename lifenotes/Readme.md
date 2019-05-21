@@ -1,6 +1,4 @@
 # README
 ----
 
-TODO: maybe add some encryptioon features
-
-TODO: open another account on douban
+TODO: make this readme file as a content for all articles.
