@@ -63,6 +63,11 @@ These are some notes for the 3rd course of Scala Specialization on Cousera.
     - [2.4.5. Order of elements in a tree](#245-order-of-elements-in-a-tree)
     - [2.4.6. Towards a reduction for arrays](#246-towards-a-reduction-for-arrays)
   - [2.5. Associative operation](#25-associative-operation)
+    - [Using sum: array norm](#using-sum-array-norm)
+    - [Floating point operation](#floating-point-operation)
+    - [Associative operations on tuples](#associative-operations-on-tuples)
+    - [Example: average](#example-average)
+    - [Associativity through symmetry and commutativity](#associativity-through-symmetry-and-commutativity)
 - [3. Week 3 Data-ParaLLelism](#3-week-3-data-parallelism)
 - [4. Week 4 Data Structures](#4-week-4-data-structures)
 
@@ -845,10 +850,13 @@ def mapTreePar[A:Manifest,B:Manifest](t: Tree[A], f: A => B): Tree[B] = t match 
   - whether they take an initial element or assume non-empty list
   - in which order they combine operations of collection
 
-  `List(1,3,8).foldLeft(100)((s,x) => s -x) == ((100 - 1) - 3) - 8 == 88`
-  `List(1,3,8).foldRight(100)((s,x) => s -x) == 1 - (3 - (8 - 100)) == -94`
-  `List(1,3,8).reduceLeft((s,x) => s -x) == (1 - 3) - 8 == -10`
-  `List(1,3,8).reduceRight(100)((s,x) => s -x) == 1 - (3 - 8) == 6`
+  `List(1,3,8).foldLeft(100)((s,x) => s - x) == ((100 - 1) - 3) - 8 == 88`
+
+  `List(1,3,8).foldRight(100)((s,x) => s - x) == 1 - (3 - (8 - 100)) == -94`
+
+  `List(1,3,8).reduceLeft((s,x) => s - x) == (1 - 3) - 8 == -10`
+
+  `List(1,3,8).reduceRight(100)((s,x) => s - x) == 1 - (3 - 8) == 6`
 
   To enable parallel operations, we look at **associative** operations
 
@@ -856,7 +864,7 @@ def mapTreePar[A:Manifest,B:Manifest](t: Tree[A], f: A => B): Tree[B] = t match 
 
 ### 2.4.1. Associative operation
 
-  Operation `f: (A,A) => A` is associative iff for every $x, y, z$:
+  Operation `f: (A,A) => A` is **associative** iff for every $x, y, z$:
 
   $f(x, f(y, z)) = f(f(x, y), z)$
 
@@ -972,6 +980,85 @@ def reduce[A](inp: Array[A], f: (A,A) => A): A =
 ```
 
 ## 2.5. Associative operation
+
+  Operation `f: (A,A) => A` is **associative** iff for every $x, y, z$:
+
+  $f(x, f(y, z)) = f(f(x, y), z)$
+
+  Operation `f: (A,A) => A` is **commutative** iff for every $x, y$:
+
+  $f(x, y) = f(y, x)$
+
+  For correctness of **reduce**, we need (just) associativity.
+
+### Using sum: array norm
+
+  $\sum_{i=s}^{t-1} |a_i|^p$ corresponds to `reduce(map(a, power(abs(_), p)), _ + _)`.
+
+  `map` can be used together with `reduce` to avoid intermediate collections.
+
+### Floating point operation
+
+  Addition is commutative but not associative
+
+```scala
+scala> val e = 1e-200
+e: Double = 1.0E-200
+scala> val x = 1e200
+x: Double = 1.0E200
+scala> val mx = -x
+mx: Double = -1.0E200
+
+scala> (x + mx) + e
+res0: Double = 1.0E-200
+scala> x + (mx + e)
+res1: Double = 0.0
+scala> (x + mx) + e = x + (mx + e)
+res2: Boolean = false
+```
+
+  Multiplication is commutative but not associative
+
+```scala
+scala> (e * x) * x
+res3: Double = 1.0E200
+scala> e * (x * x)
+res4: Double = Infinity
+scala> (e * x) * x == e * (x * x)
+res5: Boolean = false
+```
+
+### Associative operations on tuples
+
+  Suppose `f1: (A1,A1) => A1` and `f2, (A2,A2) => A2` are associative.
+
+  Then `f: ((A1,A2),(A1,A2)) => (A1,A2)` defined by
+
+  `f((x1,x2),(y1,y2)) = (f1(x1,y1),f2(x2,y2))`
+
+  is also associative.
+
+  It's similar to construct associative operations on for n-tuples.
+
+### Example: average
+
+  Given a collction of integers, compute the average.
+
+```scala
+// Two reduction solution.
+val sum = reduce(collection, _ + _)
+val length = reduce(map(collection, (x: Int) => 1), _ + _)
+sum / length
+
+// single reduction solution.
+// f((sum1, length1), (sum2, length2)) = (sum1 + sum2, length1 + length2)
+val (sum, length) = reduce(map(collection, (x: Int) => (x, 1), f)
+sum / length
+```
+
+### Associativity through symmetry and commutativity
+
+  If `f` satisfies `f(f(x,y),z) = f(f(y,z),x)`(symmetry) and `f(x,y) = f(y,x)`(commutativity) for every `x, y, z`, we have `f(f(x,y),z) = f(x, f((y,z)))`(associativity).
 
 
 # 3. Week 3 Data-ParaLLelism
