@@ -63,11 +63,11 @@ These are some notes for the 3rd course of Scala Specialization on Cousera.
     - [2.4.5. Order of elements in a tree](#245-order-of-elements-in-a-tree)
     - [2.4.6. Towards a reduction for arrays](#246-towards-a-reduction-for-arrays)
   - [2.5. Associative operation](#25-associative-operation)
-    - [Using sum: array norm](#using-sum-array-norm)
-    - [Floating point operation](#floating-point-operation)
-    - [Associative operations on tuples](#associative-operations-on-tuples)
-    - [Example: average](#example-average)
-    - [Associativity through symmetry and commutativity](#associativity-through-symmetry-and-commutativity)
+    - [2.5.1. Using sum: array norm](#251-using-sum-array-norm)
+    - [2.5.2. Floating point operation](#252-floating-point-operation)
+    - [2.5.3. Associative operations on tuples](#253-associative-operations-on-tuples)
+    - [2.5.4. Example: average](#254-example-average)
+    - [2.5.5. Associativity through symmetry and commutativity](#255-associativity-through-symmetry-and-commutativity)
 - [3. Week 3 Data-ParaLLelism](#3-week-3-data-parallelism)
 - [4. Week 4 Data Structures](#4-week-4-data-structures)
 
@@ -991,13 +991,13 @@ def reduce[A](inp: Array[A], f: (A,A) => A): A =
 
   For correctness of **reduce**, we need (just) associativity.
 
-### Using sum: array norm
+### 2.5.1. Using sum: array norm
 
   $\sum_{i=s}^{t-1} |a_i|^p$ corresponds to `reduce(map(a, power(abs(_), p)), _ + _)`.
 
   `map` can be used together with `reduce` to avoid intermediate collections.
 
-### Floating point operation
+### 2.5.2. Floating point operation
 
   Addition is commutative but not associative
 
@@ -1028,7 +1028,7 @@ scala> (e * x) * x == e * (x * x)
 res5: Boolean = false
 ```
 
-### Associative operations on tuples
+### 2.5.3. Associative operations on tuples
 
   Suppose `f1: (A1,A1) => A1` and `f2, (A2,A2) => A2` are associative.
 
@@ -1040,7 +1040,7 @@ res5: Boolean = false
 
   It's similar to construct associative operations on for n-tuples.
 
-### Example: average
+### 2.5.4. Example: average
 
   Given a collction of integers, compute the average.
 
@@ -1056,7 +1056,7 @@ val (sum, length) = reduce(map(collection, (x: Int) => (x, 1), f)
 sum / length
 ```
 
-### Associativity through symmetry and commutativity
+### 2.5.5. Associativity through symmetry and commutativity
 
   If `f` satisfies `f(f(x,y),z) = f(f(y,z),x)`(symmetry) and `f(x,y) = f(y,x)`(commutativity) for every `x, y, z`, we have `f(f(x,y),z) = f(x, f((y,z)))`(associativity).
 
