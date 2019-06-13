@@ -3,7 +3,8 @@ Parallel Programming
 
 These are some notes for the 3rd course of Scala Specialization on Cousera.
 
-- [Parallel Programming](#parallel-programming)
+<!-- TOC -->
+
 - [1. Week 1 Basics](#1-week-1-basics)
   - [1.1. JVM and parallelism](#11-jvm-and-parallelism)
     - [1.1.1. Process](#111-process)
@@ -22,7 +23,7 @@ These are some notes for the 3rd course of Scala Specialization on Cousera.
     - [1.2.3. Signature of parallel](#123-signature-of-parallel)
     - [1.2.4. Underlying Hardware Architecture Affects Performance](#124-underlying-hardware-architecture-affects-performance)
     - [1.2.5. Combining computations of different length with parallel](#125-combining-computations-of-different-length-with-parallel)
-    - [1.2.6. Example: Monte Carlo Method to Estimate $\pi$](#126-example-monte-carlo-method-to-estimate-pi)
+    - [1.2.6. Example: Monte Carlo Method to Estimate $\pi$](#126-example-monte-carlo-method-to-estimate-\pi)
   - [1.3. First-Class Tasks](#13-first-class-tasks)
     - [1.3.1. More flexible construct for parallel computation](#131-more-flexible-construct-for-parallel-computation)
     - [1.3.2. Task interface](#132-task-interface)
@@ -42,20 +43,22 @@ These are some notes for the 3rd course of Scala Specialization on Cousera.
     - [1.5.8. ScalaMeter Warmers](#158-scalameter-warmers)
     - [1.5.9. ScalaMeter Measures](#159-scalameter-measures)
 - [2. Week 2 Task-Parallelism](#2-week-2-task-parallelism)
-  - [Parallel Sorting](#parallel-sorting)
-    - [Merge Sort](#merge-sort)
-    - [Copying the Array](#copying-the-array)
-  - [Parallelism and collections](#parallelism-and-collections)
-    - [Functional programming and collections](#functional-programming-and-collections)
-    - [Choice of data structures](#choice-of-data-structures)
-    - [Map: meaning and properties](#map-meaning-and-properties)
-    - [Map as function on lists](#map-as-function-on-lists)
-    - [Sequential map of an array producing an array](#sequential-map-of-an-array-producing-an-array)
-    - [Parallel map of an array producing an array](#parallel-map-of-an-array-producing-an-array)
-    - [Parallel map on immutable trees](#parallel-map-on-immutable-trees)
-    - [Comparison of arrays and immutable trees](#comparison-of-arrays-and-immutable-trees)
+  - [2.1. Parallel Sorting](#21-parallel-sorting)
+    - [2.1.1. Merge Sort](#211-merge-sort)
+    - [2.1.2. Copying the Array](#212-copying-the-array)
+  - [2.2. Parallelism and collections](#22-parallelism-and-collections)
+    - [2.2.1. Functional programming and collections](#221-functional-programming-and-collections)
+    - [2.2.2. Choice of data structures](#222-choice-of-data-structures)
+    - [2.2.3. Map: meaning and properties](#223-map-meaning-and-properties)
+    - [2.2.4. Map as function on lists](#224-map-as-function-on-lists)
+    - [2.2.5. Sequential map of an array producing an array](#225-sequential-map-of-an-array-producing-an-array)
+    - [2.2.6. Parallel map of an array producing an array](#226-parallel-map-of-an-array-producing-an-array)
+    - [2.2.7. Parallel map on immutable trees](#227-parallel-map-on-immutable-trees)
+    - [2.2.8. Comparison of arrays and immutable trees](#228-comparison-of-arrays-and-immutable-trees)
 - [3. Week 3 Data-ParaLLelism](#3-week-3-data-parallelism)
 - [4. Week 4 Data Structures](#4-week-4-data-structures)
+
+<!-- /TOC -->
 
 # 1. Week 1 Basics
 ## 1.1. JVM and parallelism
@@ -619,11 +622,11 @@ val time = withMeasurer(new Measurer.MemoryFootprint) measure {
 
 # 2. Week 2 Task-Parallelism
 
-## Parallel Sorting
+## 2.1. Parallel Sorting
 
   Sort in parallel
 
-### Merge Sort
+### 2.1.1. Merge Sort
 
   1. recursivley sort the tow halves of the array in parallel
   2. sequentially merge the two array halves by copying into a temporary array
@@ -658,7 +661,7 @@ def parMergeSort(xs: Array[Int], maxDepth: Int): Unit = {
 }
 ```
 
-### Copying the Array
+### 2.1.2. Copying the Array
 
 ```scala
 def copy(src: Array[Int], target: Array[Int], from: Int, until: Int, depth: Int): Unit = {
@@ -676,7 +679,7 @@ def copy(src: Array[Int], target: Array[Int], from: Int, until: Int, depth: Int)
 if (maxDepth % 2 == 0) copy(ys, xs, 0, xs.length, 0)
 ```
 
-## Parallelism and collections
+## 2.2. Parallelism and collections
 
   Parallel processing of collections is important. It is one of the main applications of parallelsim today.
 
@@ -685,7 +688,7 @@ if (maxDepth % 2 == 0) copy(ys, xs, 0, xs.length, 0)
   - properties of collections: ablility to split, combine
   - properties of operations: associativity, independence
 
-### Functional programming and collections
+### 2.2.1. Functional programming and collections
 
   Opertations on collections are key to functional programming
 
@@ -701,7 +704,7 @@ if (maxDepth % 2 == 0) copy(ys, xs, 0, xs.length, 0)
 
   - `List(1,3,8).scan(100)((s,x) => s + x) == List(100, 101, 104, 112)`
 
-### Choice of data structures
+### 2.2.2. Choice of data structures
 
   We use `List` to speicfy the results of operations. Lists are not good for parallel implementations because we cannot efficiently
 
@@ -713,7 +716,7 @@ if (maxDepth % 2 == 0) copy(ys, xs, 0, xs.length, 0)
   - `arrays`: imperative (recall array sum)
   - `trees`: can be implemented functionally
 
-### Map: meaning and properties
+### 2.2.3. Map: meaning and properties
 
   Map applies a given function to each list element
 
@@ -726,7 +729,7 @@ if (maxDepth % 2 == 0) copy(ys, xs, 0, xs.length, 0)
 
   Recall `(f.compose(g))(x) == f(g(x))`
 
-### Map as function on lists
+### 2.2.4. Map as function on lists
 
 ```scala
 // sequential definition
@@ -741,7 +744,7 @@ def mapSeq[A, B](lst: List[A], f: A => B): List[B] = lst match {
   - computations of `f(h)` for different elements `h`
   - finding the elements themselves (list is not a good choice)
 
-### Sequential map of an array producing an array
+### 2.2.5. Sequential map of an array producing an array
 
 ```scala
 def mapASegSeq[A,B](inp: Array[A], left: Int, right: Int, f: A => B, out: Array[B]): Unit = {
@@ -754,7 +757,7 @@ def mapASegSeq[A,B](inp: Array[A], left: Int, right: Int, f: A => B, out: Array[
 }
 ```
 
-### Parallel map of an array producing an array
+### 2.2.6. Parallel map of an array producing an array
 
 ```scala
 def mapASegPar[A,B](inp: Array[A], left: Int, right: Int, f: A => B, out: Array[B]): Unit = {
@@ -774,7 +777,7 @@ def mapASegPar[A,B](inp: Array[A], left: Int, right: Int, f: A => B, out: Array[
   - writes need to be disjoint (otherwise: non-deterministic behavior)
   - threshold needs to be large enough (otherwise we lose efficiency)
 
-### Parallel map on immutable trees
+### 2.2.7. Parallel map on immutable trees
 
   Consider trees where
 
@@ -806,7 +809,7 @@ def mapTreePar[A:Manifest,B:Manifest](t: Tree[A], f: A => B): Tree[B] = t match 
 }
 ```
 
-### Comparison of arrays and immutable trees
+### 2.2.8. Comparison of arrays and immutable trees
 
   Arrays
 
