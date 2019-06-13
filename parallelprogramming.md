@@ -47,6 +47,13 @@ These are some notes for the 3rd course of Scala Specialization on Cousera.
     - [Copying the Array](#copying-the-array)
   - [Parallelism and collections](#parallelism-and-collections)
     - [Functional programming and collections](#functional-programming-and-collections)
+    - [Choice of data structures](#choice-of-data-structures)
+    - [Map: meaning and properties](#map-meaning-and-properties)
+    - [Map as function on lists](#map-as-function-on-lists)
+    - [Sequential map of an array producing an array](#sequential-map-of-an-array-producing-an-array)
+    - [Parallel map of an array producing an array](#parallel-map-of-an-array-producing-an-array)
+    - [Parallel map on immutable trees](#parallel-map-on-immutable-trees)
+    - [Comparison of arrays and immutable trees](#comparison-of-arrays-and-immutable-trees)
 - [3. Week 3 Data-ParaLLelism](#3-week-3-data-parallelism)
 - [4. Week 4 Data Structures](#4-week-4-data-structures)
 
@@ -686,6 +693,135 @@ if (maxDepth % 2 == 0) copy(ys, xs, 0, xs.length, 0)
 
   - `List(1,3,8).map(x => x*x) == List(1,9,64)`
 
+  `fold`: combine elements with a given collection
+
+  - `List(1,3,8).fold(100)((s,x) => s + x) == 112`
+
+  `scan`: combine folds of all list prefixes
+
+  - `List(1,3,8).scan(100)((s,x) => s + x) == List(100, 101, 104, 112)`
+
+### Choice of data structures
+
+  We use `List` to speicfy the results of operations. Lists are not good for parallel implementations because we cannot efficiently
+
+  - split them in half (need to search for the middle)
+  - combine them (concatenation needs linear time)
+
+  We use for now these alternatives:
+
+  - `arrays`: imperative (recall array sum)
+  - `trees`: can be implemented functionally
+
+### Map: meaning and properties
+
+  Map applies a given function to each list element
+
+  `List(a1, a2, ..., a3).map(f) == List(f(a1), f(a2), ..., f(an))`
+
+  Properties to keep in mind:
+
+  - `list.map(x => x) == list`
+  - `list.map(f.compose(g)) = list.map(g).map(f)` 
+
+  Recall `(f.compose(g))(x) == f(g(x))`
+
+### Map as function on lists
+
+```scala
+// sequential definition
+def mapSeq[A, B](lst: List[A], f: A => B): List[B] = lst match {
+  case Nil => Nil
+  case h :: t => f(h) :: mapSwq(t, f)
+}
+```
+
+  We would like a version that parallelizes
+
+  - computations of `f(h)` for different elements `h`
+  - finding the elements themselves (list is not a good choice)
+
+### Sequential map of an array producing an array
+
+```scala
+def mapASegSeq[A,B](inp: Array[A], left: Int, right: Int, f: A => B, out: Array[B]): Unit = {
+  // Writes to out(i) for left <= i <= right-1
+  var i = left
+  while (i < right) {
+    out(i) = f(inp(i))
+    i = i+1
+  }
+}
+```
+
+### Parallel map of an array producing an array
+
+```scala
+def mapASegPar[A,B](inp: Array[A], left: Int, right: Int, f: A => B, out: Array[B]): Unit = {
+  // Writes to out(i) for left <= i <= right-1
+  if (right - left < threshold)
+    mapASegSeq(inp, left, right, f, out)
+  else {
+    val mid = left + (right - left) / 2
+    parallel(
+      mapASegPar(inp, left, mid, f, out),
+      mapASegPar(inp, mid, right, f, out)
+    )
+  }
+}
+```
+
+  - writes need to be disjoint (otherwise: non-deterministic behavior)
+  - threshold needs to be large enough (otherwise we lose efficiency)
+
+### Parallel map on immutable trees
+
+  Consider trees where
+
+  - leaves store array segments
+  - non-leaf node stores number of elements
+
+  We assume that our tress are balanced: we can explore branches in parallel
+
+```scala
+sealed abstract class Tree[A] { val size: Int }
+case class Leaf[A](a: Array[A]) extends Tree[A] {
+  override val size = a.size
+}
+case class Node[A](l: Tree[A], r: Tree[A]) extends Tree[A] {
+  override val size = l.size + r.size
+}
+
+def mapTreePar[A:Manifest,B:Manifest](t: Tree[A], f: A => B): Tree[B] = t match {
+  case Leaf(a) => {
+    val len = a.length; val b = new Array[B](len)
+    var i = 0
+    while (i < len) { b(i) = f(a(i)); i = i + 1 }
+    Leaf(b)
+  }
+  case Node(l, r) => {
+    val (lb,rb) = parallel(mapTreePar(l,f), mapTreePar(r,f))
+    Node(lb,rb)
+  }
+}
+```
+
+### Comparison of arrays and immutable trees
+
+  Arrays
+
+  - (+) random access to elements, on shared memory can share array
+  - (+) good memory locality
+  - (-) imperative: must ensure parallel tasks write to disjoint parts
+  - (-) expensive to concatenate
+
+  Immutable trees:
+
+  - (+) purely functional, produce new trees, keep old ones
+  - (+) no need to worry about disjointness of writes by parallel tasks
+  - (+) efficient to combine two trees
+  - (-) high memory allocation overhead
+  - (-) bad locality
 
 # 3. Week 3 Data-ParaLLelism
 # 4. Week 4 Data Structures
