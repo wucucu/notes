@@ -42,6 +42,11 @@ These are some notes for the 3rd course of Scala Specialization on Cousera.
     - [1.5.8. ScalaMeter Warmers](#158-scalameter-warmers)
     - [1.5.9. ScalaMeter Measures](#159-scalameter-measures)
 - [2. Week 2 Task-Parallelism](#2-week-2-task-parallelism)
+  - [Parallel Sorting](#parallel-sorting)
+    - [Merge Sort](#merge-sort)
+    - [Copying the Array](#copying-the-array)
+  - [Parallelism and collections](#parallelism-and-collections)
+    - [Functional programming and collections](#functional-programming-and-collections)
 - [3. Week 3 Data-ParaLLelism](#3-week-3-data-parallelism)
 - [4. Week 4 Data Structures](#4-week-4-data-structures)
 
@@ -606,6 +611,82 @@ val time = withMeasurer(new Measurer.MemoryFootprint) measure {
 ```
 
 # 2. Week 2 Task-Parallelism
+
+## Parallel Sorting
+
+  Sort in parallel
+
+### Merge Sort
+
+  1. recursivley sort the tow halves of the array in parallel
+  2. sequentially merge the two array halves by copying into a temporary array
+  3. copy the demporary array backi into the original array
+
+```scala
+def parMergeSort(xs: Array[Int], maxDepth: Int): Unit = {
+  // At each level of the merge sort, we will alternate between the source array xs and the intermediate array ys
+  val ys = new Array[Int](xs.length)
+
+  def sort(from: Int, until: Int, depth: Int): Unit = {
+    if (depth == maxDepth) {
+      // sequential sort
+      quickSort(xs, from, until - from)
+    } else {
+      val mid = (from + until) / 2
+      parallel(sort(mid, until, depth + 1), sort(from, mid, depth + 1))
+      val flip = (maxDepth - depth) % 2 == 0
+      val src = if (flip) ys else xs
+      val dst = if (flip) xs else ys
+      merge(src, dst, from, mid, until)
+    }
+  }
+
+  def merge(src: Array[Int], dst: Array[Int], from: Int, mid: Int, until: Int): Unit ={
+    // Given an array src consisting of two sorted intervals, merge those interval into the dst array.
+    // The merge implementation is sequential, so it will note be gone through here.
+    // Exerise: How would you implement merge function in parallel?
+  }
+
+  sort(0, xs.length, 0)
+}
+```
+
+### Copying the Array
+
+```scala
+def copy(src: Array[Int], target: Array[Int], from: Int, until: Int, depth: Int): Unit = {
+  if (depth == maxDepth) {
+    Array.copy(src, from, targt, from, until - from)
+  } else {
+    val mid = (from + until) / 2
+    val right = parallel(
+      copy(src, target, mid, until, depth + 1)
+      copy(src, target, from, mid, depth + 1)
+    )
+  }
+}
+
+if (maxDepth % 2 == 0) copy(ys, xs, 0, xs.length, 0)
+```
+
+## Parallelism and collections
+
+  Parallel processing of collections is important. It is one of the main applications of parallelsim today.
+
+  We examine conditions when this can be done:
+
+  - properties of collections: ablility to split, combine
+  - properties of operations: associativity, independence
+
+### Functional programming and collections
+
+  Opertations on collections are key to functional programming
+
+  `map`: apply function to each element
+
+  - `List(1,3,8).map(x => x*x) == List(1,9,64)`
+
+
 # 3. Week 3 Data-ParaLLelism
 # 4. Week 4 Data Structures
 
