@@ -75,9 +75,9 @@ These are some notes for the 3rd course of Scala Specialization on Cousera.
     - [2.6.2. Sequential Scan](#262-sequential-scan)
     - [2.6.3. High-level approach: expr``ess `scan` using `map` and `reduce`](#263-high-level-approach-express-scan-using-map-and-reduce)
     - [2.6.4. Reusing intermediate reduce results by tree](#264-reusing-intermediate-reduce-results-by-tree)
-    - [Create final collection from tree](#create-final-collection-from-tree)
-    - [`scanLeft` on trees](#scanleft-on-trees)
-    - [Array reduce by tree](#array-reduce-by-tree)
+    - [2.6.5. Create final collection from tree](#265-create-final-collection-from-tree)
+    - [2.6.6. `scanLeft` on trees](#266-scanleft-on-trees)
+    - [2.6.7. Array reduce by tree](#267-array-reduce-by-tree)
 - [3. Week 3 Data-Parallelism](#3-week-3-data-parallelism)
 - [4. Week 4 Data Structures](#4-week-4-data-structures)
 
@@ -1159,7 +1159,7 @@ def upsweep[A](t: Tree[A], f: (A,A) => A): TreeRes[A] = t match {
 }
 ```
 
-### Create final collection from tree
+### 2.6.5. Create final collection from tree
 
 ```scala
 // a0 is reduce of all elements left of the tree
@@ -1175,7 +1175,7 @@ def downsweep[A](t: TreeRes[A], a0: A, f: (A, A) => A): Tree[A] = t match {
 }
 ```
 
-### `scanLeft` on trees
+### 2.6.6. `scanLeft` on trees
 
 ```scala
 def scanLeft[A](t: Tree[A], a0: A, f: (A,A) => A): Tree[A] = {
@@ -1190,7 +1190,7 @@ def prepend[A](x: A, t: Tree[A]): Tree[A] = t match {
 }
 ```
 
-### Array reduce by tree
+### 2.6.7. Array reduce by tree
 
   The only difference compared to previouse `TreeRes`: each Leaf now keeps track of the array segment range `(from, to)` from which `res` is computed.
 
