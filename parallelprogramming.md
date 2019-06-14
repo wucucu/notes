@@ -5,88 +5,93 @@ These are some notes for the 3rd course of Scala Specialization on Cousera.
 
 <!-- TOC -->
 
-- [Week 1 Basics](#week-1-basics)
-  - [JVM and parallelism](#jvm-and-parallelism)
-    - [Process](#process)
-    - [Threads](#threads)
-    - [Creating/Starting Threads](#creatingstarting-threads)
-    - [Example: Starting Threads](#example-starting-threads)
-    - [Atomicity](#atomicity)
-    - [The Synchronized Block](#the-synchronized-block)
-    - [Composition with the synchronized block](#composition-with-the-synchronized-block)
-    - [Deadlocks](#deadlocks)
-    - [Memory Model](#memory-model)
-    - [Summary](#summary)
-  - [Running Computations in Parallel](#running-computations-in-parallel)
-    - [Basic parallel construct](#basic-parallel-construct)
-    - [Example: computing p-norm](#example-computing-p-norm)
-    - [Signature of parallel](#signature-of-parallel)
-    - [Underlying Hardware Architecture Affects Performance](#underlying-hardware-architecture-affects-performance)
-    - [Combining computations of different length with parallel](#combining-computations-of-different-length-with-parallel)
-    - [Example: Monte Carlo Method to Estimate $\pi$](#example-monte-carlo-method-to-estimate-\pi)
-  - [First-Class Tasks](#first-class-tasks)
-    - [More flexible construct for parallel computation](#more-flexible-construct-for-parallel-computation)
-    - [Task interface](#task-interface)
-  - [How Fast are Parallel Programs](#how-fast-are-parallel-programs)
-    - [Work and depth](#work-and-depth)
-    - [Rules for depth and work](#rules-for-depth-and-work)
-    - [Computing time bound for given parallelism](#computing-time-bound-for-given-parallelism)
-    - [Parallelism and Amdahl's Law](#parallelism-and-amdahls-law)
-  - [Benchmarking Parallel Programs](#benchmarking-parallel-programs)
-    - [Testing and Benchmarking](#testing-and-benchmarking)
-    - [Benchmarking Parallel Programs](#benchmarking-parallel-programs-1)
-    - [Performance Factors](#performance-factors)
-    - [Measurement Methodologies](#measurement-methodologies)
-    - [ScalaMeter](#scalameter)
-    - [Using ScalaMeter](#using-scalameter)
-    - [JVM Warmup](#jvm-warmup)
-    - [ScalaMeter Warmers](#scalameter-warmers)
-    - [ScalaMeter Measures](#scalameter-measures)
-- [Week 2 Task-Parallelism](#week-2-task-parallelism)
-  - [Parallel Sorting](#parallel-sorting)
-    - [Merge Sort](#merge-sort)
-    - [Copying the Array](#copying-the-array)
-  - [Parallelism And Collections](#parallelism-and-collections)
-    - [Functional programming and collections](#functional-programming-and-collections)
-    - [Choice of data structures](#choice-of-data-structures)
-  - [Parallel Mapping](#parallel-mapping)
-    - [Map: meaning and properties](#map-meaning-and-properties)
-    - [Map as function on lists](#map-as-function-on-lists)
-    - [Sequential map of an array producing an array](#sequential-map-of-an-array-producing-an-array)
-    - [Parallel map of an array producing an array](#parallel-map-of-an-array-producing-an-array)
-    - [Parallel map on immutable trees](#parallel-map-on-immutable-trees)
-    - [Comparison of arrays and immutable trees](#comparison-of-arrays-and-immutable-trees)
-  - [Parallel Fold (Reduce) Operation](#parallel-fold-reduce-operation)
-    - [Fold (Reduce): meaning and properties](#fold-reduce-meaning-and-properties)
-    - [Associative operation](#associative-operation)
-    - [Trees for expressions](#trees-for-expressions)
-    - [Folding (reducing) trees](#folding-reducing-trees)
-    - [Associativity stated as tree reduction](#associativity-stated-as-tree-reduction)
-    - [Order of elements in a tree](#order-of-elements-in-a-tree)
-    - [Towards a reduction for arrays](#towards-a-reduction-for-arrays)
-  - [Associative operation](#associative-operation-1)
-    - [Using sum: array norm](#using-sum-array-norm)
-    - [Floating point operation](#floating-point-operation)
-    - [Associative operations on tuples](#associative-operations-on-tuples)
-    - [Example: average](#example-average)
-    - [Associativity through symmetry and commutativity](#associativity-through-symmetry-and-commutativity)
-  - [Parallel Scan Operation](#parallel-scan-operation)
-    - [`scanLeft`: meaning and properties](#scanleft-meaning-and-properties)
-    - [Sequential Scan](#sequential-scan)
-    - [High-level approach: express `scan` using `map` and `reduce`](#high-level-approach-express-scan-using-map-and-reduce)
-    - [Reusing intermediate reduce results by tree](#reusing-intermediate-reduce-results-by-tree)
+- [1. Week 1 Basics](#1-week-1-basics)
+  - [1.1. JVM and parallelism](#11-jvm-and-parallelism)
+    - [1.1.1. Process](#111-process)
+    - [1.1.2. Threads](#112-threads)
+    - [1.1.3. Creating/Starting Threads](#113-creatingstarting-threads)
+    - [1.1.4. Example: Starting Threads](#114-example-starting-threads)
+    - [1.1.5. Atomicity](#115-atomicity)
+    - [1.1.6. The Synchronized Block](#116-the-synchronized-block)
+    - [1.1.7. Composition with the synchronized block](#117-composition-with-the-synchronized-block)
+    - [1.1.8. Deadlocks](#118-deadlocks)
+    - [1.1.9. Memory Model](#119-memory-model)
+    - [1.1.10. Summary](#1110-summary)
+  - [1.2. Running Computations in Parallel](#12-running-computations-in-parallel)
+    - [1.2.1. Basic parallel construct](#121-basic-parallel-construct)
+    - [1.2.2. Example: computing p-norm](#122-example-computing-p-norm)
+    - [1.2.3. Signature of parallel](#123-signature-of-parallel)
+    - [1.2.4. Underlying Hardware Architecture Affects Performance](#124-underlying-hardware-architecture-affects-performance)
+    - [1.2.5. Combining computations of different length with parallel](#125-combining-computations-of-different-length-with-parallel)
+    - [1.2.6. Example: Monte Carlo Method to Estimate $\pi$](#126-example-monte-carlo-method-to-estimate-\pi)
+  - [1.3. First-Class Tasks](#13-first-class-tasks)
+    - [1.3.1. More flexible construct for parallel computation](#131-more-flexible-construct-for-parallel-computation)
+    - [1.3.2. Task interface](#132-task-interface)
+  - [1.4. How Fast are Parallel Programs](#14-how-fast-are-parallel-programs)
+    - [1.4.1. Work and depth](#141-work-and-depth)
+    - [1.4.2. Rules for depth and work](#142-rules-for-depth-and-work)
+    - [1.4.3. Computing time bound for given parallelism](#143-computing-time-bound-for-given-parallelism)
+    - [1.4.4. Parallelism and Amdahl's Law](#144-parallelism-and-amdahls-law)
+  - [1.5. Benchmarking Parallel Programs](#15-benchmarking-parallel-programs)
+    - [1.5.1. Testing and Benchmarking](#151-testing-and-benchmarking)
+    - [1.5.2. Benchmarking Parallel Programs](#152-benchmarking-parallel-programs)
+    - [1.5.3. Performance Factors](#153-performance-factors)
+    - [1.5.4. Measurement Methodologies](#154-measurement-methodologies)
+    - [1.5.5. ScalaMeter](#155-scalameter)
+    - [1.5.6. Using ScalaMeter](#156-using-scalameter)
+    - [1.5.7. JVM Warmup](#157-jvm-warmup)
+    - [1.5.8. ScalaMeter Warmers](#158-scalameter-warmers)
+    - [1.5.9. ScalaMeter Measures](#159-scalameter-measures)
+- [2. Week 2 Task-Parallelism](#2-week-2-task-parallelism)
+  - [2.1. Parallel Sorting](#21-parallel-sorting)
+    - [2.1.1. Merge Sort](#211-merge-sort)
+    - [2.1.2. Copying the Array](#212-copying-the-array)
+  - [2.2. Parallelism And Collections](#22-parallelism-and-collections)
+    - [2.2.1. Functional programming and collections](#221-functional-programming-and-collections)
+    - [2.2.2. Choice of data structures](#222-choice-of-data-structures)
+  - [2.3. Parallel Mapping](#23-parallel-mapping)
+    - [2.3.1. Map: meaning and properties](#231-map-meaning-and-properties)
+    - [2.3.2. Map as function on lists](#232-map-as-function-on-lists)
+    - [2.3.3. Sequential map of an array producing an array](#233-sequential-map-of-an-array-producing-an-array)
+    - [2.3.4. Parallel map of an array producing an array](#234-parallel-map-of-an-array-producing-an-array)
+    - [2.3.5. Parallel map on immutable trees](#235-parallel-map-on-immutable-trees)
+    - [2.3.6. Comparison of arrays and immutable trees](#236-comparison-of-arrays-and-immutable-trees)
+  - [2.4. Parallel Fold (Reduce) Operation](#24-parallel-fold-reduce-operation)
+    - [2.4.1. Fold (Reduce): meaning and properties](#241-fold-reduce-meaning-and-properties)
+    - [2.4.2. Associative operation](#242-associative-operation)
+    - [2.4.3. Trees for expressions](#243-trees-for-expressions)
+    - [2.4.4. Folding (reducing) trees](#244-folding-reducing-trees)
+    - [2.4.5. Associativity stated as tree reduction](#245-associativity-stated-as-tree-reduction)
+    - [2.4.6. Order of elements in a tree](#246-order-of-elements-in-a-tree)
+    - [2.4.7. Towards a reduction for arrays](#247-towards-a-reduction-for-arrays)
+  - [2.5. Associative operation](#25-associative-operation)
+    - [2.5.1. Using sum: array norm](#251-using-sum-array-norm)
+    - [2.5.2. Floating point operation](#252-floating-point-operation)
+    - [2.5.3. Associative operations on tuples](#253-associative-operations-on-tuples)
+    - [2.5.4. Example: average](#254-example-average)
+    - [2.5.5. Associativity through symmetry and commutativity](#255-associativity-through-symmetry-and-commutativity)
+  - [2.6. Parallel Scan Operation](#26-parallel-scan-operation)
+    - [2.6.1. `scanLeft`: meaning and properties](#261-scanleft-meaning-and-properties)
+    - [2.6.2. Sequential Scan](#262-sequential-scan)
+    - [2.6.3. High-level approach: expr``ess `scan` using `map` and `reduce`](#263-high-level-approach-express-scan-using-map-and-reduce)
+    - [2.6.4. Reusing intermediate reduce results by tree](#264-reusing-intermediate-reduce-results-by-tree)
+    - [Create final collection from tree](#create-final-collection-from-tree)
+    - [`scanLeft` on trees](#scanleft-on-trees)
+    - [Array reduce by tree](#array-reduce-by-tree)
+- [3. Week 3 Data-Parallelism](#3-week-3-data-parallelism)
+- [4. Week 4 Data Structures](#4-week-4-data-structures)
 
 <!-- /TOC -->
 
-# Week 1 Basics
-## JVM and parallelism
+# 1. Week 1 Basics
+## 1.1. JVM and parallelism
 
   We assume:
 
   - Our parallel programming model applied for **multicore** or **multiprocessor** systems with shared memory.
   - Operating system and the JVM as the underlying runtim environments.
 
-### Process
+### 1.1.1. Process
   
   **Operating System** : software that manages hardware and software resources, and shedules program executions.
   
@@ -96,7 +101,7 @@ These are some notes for the 3rd course of Scala Specialization on Cousera.
   
   Two different processes cannot access each other's memorty directly, i.e., they are isolated.
 
-### Threads
+### 1.1.2. Threads
 
   **Thread** : Each process can contain multiple independent concurrency units called **threads**.
 
@@ -104,7 +109,7 @@ These are some notes for the 3rd course of Scala Specialization on Cousera.
 
   Each thread has a program counter and a program stack.
 
-### Creating/Starting Threads
+### 1.1.3. Creating/Starting Threads
 
   Each JVM process starts with a **main thread**.
 
@@ -116,7 +121,7 @@ These are some notes for the 3rd course of Scala Specialization on Cousera.
 
   The Thread subclass defines the code that the thread will excute. The same custom `Thread` subclass can be used to start multiple threads.
 
-### Example: Starting Threads
+### 1.1.4. Example: Starting Threads
 
   Run in sbt scala console with paste mode.
 
@@ -183,7 +188,7 @@ Hello
 world!
 ```
 
-### Atomicity
+### 1.1.5. Atomicity
 
   The previous demo showed that separate statements in two threads can overlap.
 
@@ -224,7 +229,7 @@ scala> Vector(1, 2, 3, 4, 5, 6, 7, 8, 10, 12)
 Vector(1, 7, 9, 11, 13, 14, 15, 16, 17, 18)
 ```
 
-### The Synchronized Block
+### 1.1.6. The Synchronized Block
 
   The `synchronized` block is used to achieve atomicity. Code block after a `synchronized` call on an object x is never executed by two threads at the same time.
 
@@ -264,7 +269,7 @@ res0: Thread = Thread[Thread-3,5,]
   Different threads use the synchronized block to agree on unique values.
   The synchronized block is an example of a synchronization primitive.
 
-### Composition with the synchronized block
+### 1.1.7. Composition with the synchronized block
   
   Invocations of the synchronized block can nest.
 
@@ -302,7 +307,7 @@ t.join()
 s.join()
 ```
 
-### Deadlocks
+### 1.1.8. Deadlocks
 
   **Deadlock** is a scenario in which two or more threads compete for resources(such as monitor ownership), and wait for each to finish without releasing the already acquired resources.
 
@@ -358,7 +363,7 @@ t.join()
 s.join()
 ```
 
-### Memory Model
+### 1.1.9. Memory Model
 
   Memory model is a set of rules that describes how threads interact when accessing shared memory.
 
@@ -369,16 +374,16 @@ s.join()
   1. Two threads writing to separate locations in memory do not need synchronization.
   2. A thread X that calls `join` method on another thread Y is guaranteed to observe all the writes by thread Y after `join` returns.
 
-### Summary
+### 1.1.10. Summary
 
   The parallelism constructs in the remainder of the course are implemented in terms of:
 
   - threads
   - synchronization primitives such as `synchronized`
 
-## Running Computations in Parallel
+## 1.2. Running Computations in Parallel
 
-### Basic parallel construct
+### 1.2.1. Basic parallel construct
   
   Given expressions `e1` and `e2` , compute them in parallel and return the pair of results
 
@@ -386,11 +391,11 @@ s.join()
 parallel(e1, e2)
 ```
 
-### Example: computing p-norm
+### 1.2.2. Example: computing p-norm
 
   Parallelism could be done by a recursive algorithm.
 
-### Signature of parallel
+### 1.2.3. Signature of parallel
 
 ```scala
 def parallel[A, B](taskA: =>A, taskB: =>B): (A, B) = {...}
@@ -402,11 +407,11 @@ def parallel[A, B](taskA: =>A, taskB: =>B): (A, B) = {...}
 
   For parallelism, need to pass unevaluated computations(call `by name`).
 
-### Underlying Hardware Architecture Affects Performance
+### 1.2.4. Underlying Hardware Architecture Affects Performance
 
   Memory is bottleneck. Multi-processors share the memory space of RAM. The computation time can not be less that the time it takes to fetch the data from memory to processors.
 
-### Combining computations of different length with parallel
+### 1.2.5. Combining computations of different length with parallel
 
 ```scala
 val(v1, v2) = parallel(e1, e2)
@@ -414,11 +419,11 @@ val(v1, v2) = parallel(e1, e2)
 
 The minimum time that this parallel expression time is the maximum of the running times of `e1` and `e2`.
 
-### Example: Monte Carlo Method to Estimate $\pi$
+### 1.2.6. Example: Monte Carlo Method to Estimate $\pi$
 
-## First-Class Tasks
+## 1.3. First-Class Tasks
 
-### More flexible construct for parallel computation
+### 1.3.1. More flexible construct for parallel computation
 
 ```scala
 val(v1, v2) = parallel(e1, e2)
@@ -441,7 +446,7 @@ val v2 = t2.join
   - `t.join` blocks and waits until the results is computed
   - subsequent `t.join` calls quickly return the same result
 
-### Task interface
+### 1.3.2. Task interface
 
   Here is a minimal interface for tasks:
 
@@ -461,7 +466,7 @@ trait Task[A] {
 implicit def getJoin[T](x: Task[T]): T = x.join
 ```
 
-## How Fast are Parallel Programs
+## 1.4. How Fast are Parallel Programs
 
   **Performance** : a key motivation for paralellism
 
@@ -477,7 +482,7 @@ implicit def getJoin[T](x: Task[T]): T = x.join
 
   We examine worst-cast(as opposed to average) bounds.
 
-### Work and depth
+### 1.4.1. Work and depth
 
   We would like to speak about the asymptotic complexity of parallel code
   
@@ -493,7 +498,7 @@ implicit def getJoin[T](x: Task[T]): T = x.join
 
   - we take maximum of running times for arguments of parallel
 
-### Rules for depth and work
+### 1.4.2. Rules for depth and work
 
   Key rules are:
 
@@ -511,7 +516,7 @@ implicit def getJoin[T](x: Task[T]): T = x.join
 
   Note: we assume(reasonably) that constants are such that $D \le W$.
 
-### Computing time bound for given parallelism
+### 1.4.3. Computing time bound for given parallelism
 
   Suppose we know `W(e)` and `D(e)` and our platfrom has `P` parallel threads.
 
@@ -519,7 +524,7 @@ implicit def getJoin[T](x: Task[T]): T = x.join
 
   `D(e) + W(e) / P`
 
-### Parallelism and Amdahl's Law
+### 1.4.4. Parallelism and Amdahl's Law
 
   Suppose that we have two parts of a sequential computaion:
 
@@ -532,9 +537,9 @@ implicit def getJoin[T](x: Task[T]): T = x.join
 
   For `P = 100` and `f = 0.4` we obtain 2.46. Even if we speed the second part infinitely, we can obtain at most `1 / 0.4 = 2.5` speed up.
 
-## Benchmarking Parallel Programs
+## 1.5. Benchmarking Parallel Programs
 
-### Testing and Benchmarking
+### 1.5.1. Testing and Benchmarking
 
   **Testing** : ensures that parts of the program are behaving according to the intended behavior.
   
@@ -542,12 +547,12 @@ implicit def getJoin[T](x: Task[T]): T = x.join
 
   Typically, *testing* yields a binary output - a program or its part is either correct or not. *Benchmarking* usually yields a continous value, which denotes the extent to which the program is correct.
 
-### Benchmarking Parallel Programs
+### 1.5.2. Benchmarking Parallel Programs
   
   - Performance benefits are the main reason why we are writing parallel programs in the first place.
   - Benchmarking parallel programs is even more important than benchmarking sequential programs.
 
-### Performance Factors
+### 1.5.3. Performance Factors
 
   Performance(specifically, running time) is subject to many factors:
 
@@ -559,7 +564,7 @@ implicit def getJoin[T](x: Task[T]): T = x.join
 
   See [What Every Programmer Should Know About Memory, by Ulrich Drepper][WEPSKAM].
 
-### Measurement Methodologies
+### 1.5.4. Measurement Methodologies
 
   Measuring performance is difficult - usually, the a performance metric is a random variable.
 
@@ -571,14 +576,14 @@ implicit def getJoin[T](x: Task[T]): T = x.join
   
   See [Statistically Rigorous Java Performance Evaluation, by Georges, Buytaert and Eechhout][SRJPE].
 
-### ScalaMeter
+### 1.5.5. ScalaMeter
 
   ScalaMeter is a benchmarking and performance regression testing framework of JVM.
 
   -  performance regression testing: comparing performance of the current program run against known previous runs
   -  benchmarking: measuring performance of the current(part of the) program
   
-### Using ScalaMeter
+### 1.5.6. Using ScalaMeter
 
   Add ScalaMeter as a dependency:
 
@@ -598,7 +603,7 @@ val time = measure {
 println(s"Array initialization time: $time ms")
 ```
 
-### JVM Warmup
+### 1.5.7. JVM Warmup
 
   When a JVM programs starts, it undergoes a period of warmup, after which it achieves its maximum performance.
 
@@ -607,7 +612,7 @@ println(s"Array initialization time: $time ms")
   3. later, the JVM may choose to apply additional dynamic optimizations
   4. eventually, the program reaches *steady state*
 
-### ScalaMeter Warmers
+### 1.5.8. ScalaMeter Warmers
 
   Usually, we want to measure steady state program performance.
 
@@ -621,7 +626,7 @@ val time = withWarmer(new Warmer.Default) measure {
 }
 ```
 
-### ScalaMeter Measures
+### 1.5.9. ScalaMeter Measures
 
   - `Measure.Default`: plain running time
   - `IgnoringGC`: running time without GC pauses
@@ -638,13 +643,13 @@ val time = withMeasurer(new Measurer.MemoryFootprint) measure {
 }
 ```
 
-# Week 2 Task-Parallelism
+# 2. Week 2 Task-Parallelism
 
-## Parallel Sorting
+## 2.1. Parallel Sorting
 
   Sort in parallel
 
-### Merge Sort
+### 2.1.1. Merge Sort
 
   1. recursivley sort the tow halves of the array in parallel
   2. sequentially merge the two array halves by copying into a temporary array
@@ -679,7 +684,7 @@ def parMergeSort(xs: Array[Int], maxDepth: Int): Unit = {
 }
 ```
 
-### Copying the Array
+### 2.1.2. Copying the Array
 
 ```scala
 def copy(src: Array[Int], target: Array[Int], from: Int, until: Int, depth: Int): Unit = {
@@ -697,7 +702,7 @@ def copy(src: Array[Int], target: Array[Int], from: Int, until: Int, depth: Int)
 if (maxDepth % 2 == 0) copy(ys, xs, 0, xs.length, 0)
 ```
 
-## Parallelism And Collections
+## 2.2. Parallelism And Collections
 
   Parallel processing of collections is important. It is one of the main applications of parallelsim today.
 
@@ -706,7 +711,7 @@ if (maxDepth % 2 == 0) copy(ys, xs, 0, xs.length, 0)
   - properties of collections: ablility to split, combine
   - properties of operations: associativity, independence
 
-### Functional programming and collections
+### 2.2.1. Functional programming and collections
 
   Opertations on collections are key to functional programming
 
@@ -722,7 +727,7 @@ if (maxDepth % 2 == 0) copy(ys, xs, 0, xs.length, 0)
 
   - `List(1,3,8).scan(100)((s,x) => s + x) == List(100, 101, 104, 112)`
 
-### Choice of data structures
+### 2.2.2. Choice of data structures
 
   We use `List` to speicfy the results of operations. Lists are not good for parallel implementations because we cannot efficiently
 
@@ -734,9 +739,9 @@ if (maxDepth % 2 == 0) copy(ys, xs, 0, xs.length, 0)
   - `arrays`: imperative (recall array sum)
   - `trees`: can be implemented functionally
 
-## Parallel Mapping
+## 2.3. Parallel Mapping
 
-### Map: meaning and properties
+### 2.3.1. Map: meaning and properties
 
   Map applies a given function to each list element
 
@@ -749,7 +754,7 @@ if (maxDepth % 2 == 0) copy(ys, xs, 0, xs.length, 0)
 
   Recall `(f.compose(g))(x) == f(g(x))`
 
-### Map as function on lists
+### 2.3.2. Map as function on lists
 
 ```scala
 // sequential definition
@@ -764,7 +769,7 @@ def mapSeq[A, B](lst: List[A], f: A => B): List[B] = lst match {
   - computations of `f(h)` for different elements `h`
   - finding the elements themselves (list is not a good choice)
 
-### Sequential map of an array producing an array
+### 2.3.3. Sequential map of an array producing an array
 
 ```scala
 def mapASegSeq[A,B](inp: Array[A], left: Int, right: Int, f: A => B, out: Array[B]): Unit = {
@@ -777,7 +782,7 @@ def mapASegSeq[A,B](inp: Array[A], left: Int, right: Int, f: A => B, out: Array[
 }
 ```
 
-### Parallel map of an array producing an array
+### 2.3.4. Parallel map of an array producing an array
 
 ```scala
 def mapASegPar[A,B](inp: Array[A], left: Int, right: Int, f: A => B, out: Array[B]): Unit = {
@@ -797,7 +802,7 @@ def mapASegPar[A,B](inp: Array[A], left: Int, right: Int, f: A => B, out: Array[
   - writes need to be disjoint (otherwise: non-deterministic behavior)
   - threshold needs to be large enough (otherwise we lose efficiency)
 
-### Parallel map on immutable trees
+### 2.3.5. Parallel map on immutable trees
 
   Consider trees where
 
@@ -829,7 +834,7 @@ def mapTreePar[A:Manifest,B:Manifest](t: Tree[A], f: A => B): Tree[B] = t match 
 }
 ```
 
-### Comparison of arrays and immutable trees
+### 2.3.6. Comparison of arrays and immutable trees
 
   Arrays
 
@@ -846,9 +851,9 @@ def mapTreePar[A:Manifest,B:Manifest](t: Tree[A], f: A => B): Tree[B] = t match 
   - (-) high memory allocation overhead
   - (-) bad locality
 
-## Parallel Fold (Reduce) Operation
+## 2.4. Parallel Fold (Reduce) Operation
 
-### Fold (Reduce): meaning and properties
+### 2.4.1. Fold (Reduce): meaning and properties
 
   Fold combines elements with a given operation
 
@@ -871,7 +876,7 @@ def mapTreePar[A:Manifest,B:Manifest](t: Tree[A], f: A => B): Tree[B] = t match 
 
   - addiction, string concatenation (but not minus)
 
-### Associative operation
+### 2.4.2. Associative operation
 
   Operation `f: (A,A) => A` is **associative** iff for every $x, y, z$:
 
@@ -885,14 +890,14 @@ def mapTreePar[A:Manifest,B:Manifest](t: Tree[A], f: A => B): Tree[B] = t match 
 
   $(x \otimes y) \otimes (z \otimes w) = (x \otimes (y \otimes z)) \otimes w = ((x \otimes y) \otimes z) \otimes w$
 
-### Trees for expressions
+### 2.4.3. Trees for expressions
 
   Each expression built from values connected with $\otimes$ can be represented as a tree
 
   - leaves are the values
   - nodes are $\otimes$
 
-### Folding (reducing) trees
+### 2.4.4. Folding (reducing) trees
 
   Result of evaluating the expression is given by a reduce of this tree.
 
@@ -919,7 +924,7 @@ def reduce[A](t: Tree[A], f: (A,A) => A): A = t match {
 }
 ```
 
-### Associativity stated as tree reduction
+### 2.4.5. Associativity stated as tree reduction
 
   If `f` denotes $\otimes$, in Scala we can write this also as:
 
@@ -928,7 +933,7 @@ reduce(Node(Leaf(x), Node(Leaf(y), Leaf(z))), f) ==
 reduce(Node(Node(Leaf(x), Leaf(y)), Leaf(z)), f)
 ```
 
-### Order of elements in a tree
+### 2.4.6. Order of elements in a tree
 
   Observe: can use a list to describe the ordering of elements of a tree
 
@@ -956,7 +961,7 @@ def map[A,B](t: Tree[A], f: A => B): Tree[B] = t match {
 
   Consequence of associativity(Scala): if `f: (A,A) => A` is associative, `t1: Tree[A]` and `t2: Tree[B]` satisfies `toList(t1) == toList(t2)`, then: `reduce(t1, f) == reduce(t2, f)`.
 
-### Towards a reduction for arrays
+### 2.4.7. Towards a reduction for arrays
 
   Often we work with collections where we only know the ordering and not the tree structure, e.g., arrays. We can convert it into a balanced tree then do tree reduction.
 
@@ -988,7 +993,7 @@ def reduce[A](inp: Array[A], f: (A,A) => A): A =
   reduceSeg(inp, 0, inp.length, f)
 ```
 
-## Associative operation
+## 2.5. Associative operation
 
   Operation `f: (A,A) => A` is **associative** iff for every $x, y, z$:
 
@@ -1000,13 +1005,13 @@ def reduce[A](inp: Array[A], f: (A,A) => A): A =
 
   For correctness of **reduce**, we need (just) associativity.
 
-### Using sum: array norm
+### 2.5.1. Using sum: array norm
 
   $\sum_{i=s}^{t-1} |a_i|^p$ corresponds to `reduce(map(a, power(abs(_), p)), _ + _)`.
 
   `map` can be used together with `reduce` to avoid intermediate collections.
 
-### Floating point operation
+### 2.5.2. Floating point operation
 
   Addition is commutative but not associative
 
@@ -1037,7 +1042,7 @@ scala> (e * x) * x == e * (x * x)
 res5: Boolean = false
 ```
 
-### Associative operations on tuples
+### 2.5.3. Associative operations on tuples
 
   Suppose `f1: (A1,A1) => A1` and `f2, (A2,A2) => A2` are associative.
 
@@ -1049,7 +1054,7 @@ res5: Boolean = false
 
   It's similar to construct associative operations on for n-tuples.
 
-### Example: average
+### 2.5.4. Example: average
 
   Given a collction of integers, compute the average.
 
@@ -1065,13 +1070,13 @@ val (sum, length) = reduce(map(collection, (x: Int) => (x, 1), f)
 sum / length
 ```
 
-### Associativity through symmetry and commutativity
+### 2.5.5. Associativity through symmetry and commutativity
 
   If `f` satisfies `f(f(x,y),z) = f(f(y,z),x)`(symmetry) and `f(x,y) = f(y,x)`(commutativity) for every `x, y, z`, we have `f(f(x,y),z) = f(x, f((y,z)))`(associativity).
 
-## Parallel Scan Operation
+## 2.6. Parallel Scan Operation
 
-### `scanLeft`: meaning and properties
+### 2.6.1. `scanLeft`: meaning and properties
 
   `scanLeft`: list of the folds of all list prefixes
 
@@ -1081,7 +1086,7 @@ sum / length
 
   `List(1,3,8).scanRight(100)((s,x) => s + x) == List(112, 104, 101, 100)`
 
-### Sequential Scan
+### 2.6.2. Sequential Scan
 
   $List(a_1, a_2, a_3, ..., a_N).scanLeft(a_0)(f) = List(b_0, b_1, b_2, ..., b_N)$
 
@@ -1102,7 +1107,7 @@ def scanLeft[A](inp: Array[A], a0: A, f: (A,A) => A, out: Array[A]): Unit = {
 }
 ```
 
-### High-level approach: express `scan` using `map` and `reduce`
+### 2.6.3. High-level approach: expr``ess `scan` using `map` and `reduce`
 
   Assume input is given in array `inp` and that you have `reduceSeg1` and `mapSeg` functions on array segments:
 
@@ -1119,7 +1124,7 @@ def scanLeft[A](inp: Array[A], a0: A, f: (A,A) => A, out: Array[A]): Unit = {
 }
 ```
 
-### Reusing intermediate reduce results by tree
+### 2.6.4. Reusing intermediate reduce results by tree
 
   Reuse computations by saving the intermediate results in a tree. We assume that input collection is also (another) tree.
 
@@ -1138,18 +1143,17 @@ def reduceRes[A](t: Tree[A], f: (A,A) => A): TreeRes[A] = t match {
   case Leaf(v): LeafRes(v)
   case Node(l, r): {
     val (tL, tR) = (reduceRes(l, f), reduceRes(r, f))
-    val res =  f(tL.res, tR.res)
+    val res = f(tL.res, tR.res)
     NodeRes(lt, res, rt)
   }
 }
 
-```scala
 // Parallel version for reduceRes
 def upsweep[A](t: Tree[A], f: (A,A) => A): TreeRes[A] = t match {
   case Leaf(v) => LeafRes(v)
   case Node(l, r) => {
     val (tL, tR) = parallel(upsweep(l, f), upsweep(r, f))
-    val res =  f(tL.res, tR.res)
+    val res = f(tL.res, tR.res)
     NodeRes(lt, res, rt)
   }
 }
@@ -1228,7 +1232,7 @@ def scanLeft[A](inp: Array[A], a0: A, f: (A,A) => A, out: Array[A]) = {
 }
 ```
 
-# 3. Week 3 Data-ParaLLelism
+# 3. Week 3 Data-Parallelism
 # 4. Week 4 Data Structures
 
 
