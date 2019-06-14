@@ -46,28 +46,34 @@ These are some notes for the 3rd course of Scala Specialization on Cousera.
   - [2.1. Parallel Sorting](#21-parallel-sorting)
     - [2.1.1. Merge Sort](#211-merge-sort)
     - [2.1.2. Copying the Array](#212-copying-the-array)
-  - [2.2. Parallelism and collections](#22-parallelism-and-collections)
+  - [2.2. Parallelism And Collections](#22-parallelism-and-collections)
     - [2.2.1. Functional programming and collections](#221-functional-programming-and-collections)
     - [2.2.2. Choice of data structures](#222-choice-of-data-structures)
-  - [2.3. Map: meaning and properties](#23-map-meaning-and-properties)
-    - [2.3.1. Map as function on lists](#231-map-as-function-on-lists)
-    - [2.3.2. Sequential map of an array producing an array](#232-sequential-map-of-an-array-producing-an-array)
-    - [2.3.3. Parallel map of an array producing an array](#233-parallel-map-of-an-array-producing-an-array)
-    - [2.3.4. Parallel map on immutable trees](#234-parallel-map-on-immutable-trees)
-    - [2.3.5. Comparison of arrays and immutable trees](#235-comparison-of-arrays-and-immutable-trees)
-  - [2.4. Fold (Reduce): meaning and properties](#24-fold-reduce-meaning-and-properties)
-    - [2.4.1. Associative operation](#241-associative-operation)
-    - [2.4.2. Trees for expressions](#242-trees-for-expressions)
-    - [2.4.3. Folding (reducing) trees](#243-folding-reducing-trees)
-    - [2.4.4. Associativity stated as tree reduction](#244-associativity-stated-as-tree-reduction)
-    - [2.4.5. Order of elements in a tree](#245-order-of-elements-in-a-tree)
-    - [2.4.6. Towards a reduction for arrays](#246-towards-a-reduction-for-arrays)
+  - [2.3. Parallel Mapping](#23-parallel-mapping)
+    - [2.3.1. Map: meaning and properties](#231-map-meaning-and-properties)
+    - [2.3.2. Map as function on lists](#232-map-as-function-on-lists)
+    - [2.3.3. Sequential map of an array producing an array](#233-sequential-map-of-an-array-producing-an-array)
+    - [2.3.4. Parallel map of an array producing an array](#234-parallel-map-of-an-array-producing-an-array)
+    - [2.3.5. Parallel map on immutable trees](#235-parallel-map-on-immutable-trees)
+    - [2.3.6. Comparison of arrays and immutable trees](#236-comparison-of-arrays-and-immutable-trees)
+  - [2.4. Parallel Fold (Reduce) Operation](#24-parallel-fold-reduce-operation)
+    - [2.4.1. Fold (Reduce): meaning and properties](#241-fold-reduce-meaning-and-properties)
+    - [2.4.2. Associative operation](#242-associative-operation)
+    - [2.4.3. Trees for expressions](#243-trees-for-expressions)
+    - [2.4.4. Folding (reducing) trees](#244-folding-reducing-trees)
+    - [2.4.5. Associativity stated as tree reduction](#245-associativity-stated-as-tree-reduction)
+    - [2.4.6. Order of elements in a tree](#246-order-of-elements-in-a-tree)
+    - [2.4.7. Towards a reduction for arrays](#247-towards-a-reduction-for-arrays)
   - [2.5. Associative operation](#25-associative-operation)
     - [2.5.1. Using sum: array norm](#251-using-sum-array-norm)
     - [2.5.2. Floating point operation](#252-floating-point-operation)
     - [2.5.3. Associative operations on tuples](#253-associative-operations-on-tuples)
     - [2.5.4. Example: average](#254-example-average)
     - [2.5.5. Associativity through symmetry and commutativity](#255-associativity-through-symmetry-and-commutativity)
+  - [2.6. Parallel Scan Operation](#26-parallel-scan-operation)
+    - [2.6.1. `scanLeft`: meaning and properties](#261-scanleft-meaning-and-properties)
+    - [2.6.2. Sequential Scan](#262-sequential-scan)
+    - [2.6.3. High-level approach: express `scan` using `map` and `reduce`](#263-high-level-approach-express-scan-using-map-and-reduce)
 - [3. Week 3 Data-ParaLLelism](#3-week-3-data-parallelism)
 - [4. Week 4 Data Structures](#4-week-4-data-structures)
 
@@ -692,7 +698,7 @@ def copy(src: Array[Int], target: Array[Int], from: Int, until: Int, depth: Int)
 if (maxDepth % 2 == 0) copy(ys, xs, 0, xs.length, 0)
 ```
 
-## 2.2. Parallelism and collections
+## 2.2. Parallelism And Collections
 
   Parallel processing of collections is important. It is one of the main applications of parallelsim today.
 
@@ -729,7 +735,9 @@ if (maxDepth % 2 == 0) copy(ys, xs, 0, xs.length, 0)
   - `arrays`: imperative (recall array sum)
   - `trees`: can be implemented functionally
 
-## 2.3. Map: meaning and properties
+## 2.3. Parallel Mapping
+
+### 2.3.1. Map: meaning and properties
 
   Map applies a given function to each list element
 
@@ -742,7 +750,7 @@ if (maxDepth % 2 == 0) copy(ys, xs, 0, xs.length, 0)
 
   Recall `(f.compose(g))(x) == f(g(x))`
 
-### 2.3.1. Map as function on lists
+### 2.3.2. Map as function on lists
 
 ```scala
 // sequential definition
@@ -757,7 +765,7 @@ def mapSeq[A, B](lst: List[A], f: A => B): List[B] = lst match {
   - computations of `f(h)` for different elements `h`
   - finding the elements themselves (list is not a good choice)
 
-### 2.3.2. Sequential map of an array producing an array
+### 2.3.3. Sequential map of an array producing an array
 
 ```scala
 def mapASegSeq[A,B](inp: Array[A], left: Int, right: Int, f: A => B, out: Array[B]): Unit = {
@@ -770,7 +778,7 @@ def mapASegSeq[A,B](inp: Array[A], left: Int, right: Int, f: A => B, out: Array[
 }
 ```
 
-### 2.3.3. Parallel map of an array producing an array
+### 2.3.4. Parallel map of an array producing an array
 
 ```scala
 def mapASegPar[A,B](inp: Array[A], left: Int, right: Int, f: A => B, out: Array[B]): Unit = {
@@ -790,7 +798,7 @@ def mapASegPar[A,B](inp: Array[A], left: Int, right: Int, f: A => B, out: Array[
   - writes need to be disjoint (otherwise: non-deterministic behavior)
   - threshold needs to be large enough (otherwise we lose efficiency)
 
-### 2.3.4. Parallel map on immutable trees
+### 2.3.5. Parallel map on immutable trees
 
   Consider trees where
 
@@ -822,7 +830,7 @@ def mapTreePar[A:Manifest,B:Manifest](t: Tree[A], f: A => B): Tree[B] = t match 
 }
 ```
 
-### 2.3.5. Comparison of arrays and immutable trees
+### 2.3.6. Comparison of arrays and immutable trees
 
   Arrays
 
@@ -839,7 +847,9 @@ def mapTreePar[A:Manifest,B:Manifest](t: Tree[A], f: A => B): Tree[B] = t match 
   - (-) high memory allocation overhead
   - (-) bad locality
 
-## 2.4. Fold (Reduce): meaning and properties
+## 2.4. Parallel Fold (Reduce) Operation
+
+### 2.4.1. Fold (Reduce): meaning and properties
 
   Fold combines elements with a given operation
 
@@ -862,7 +872,7 @@ def mapTreePar[A:Manifest,B:Manifest](t: Tree[A], f: A => B): Tree[B] = t match 
 
   - addiction, string concatenation (but not minus)
 
-### 2.4.1. Associative operation
+### 2.4.2. Associative operation
 
   Operation `f: (A,A) => A` is **associative** iff for every $x, y, z$:
 
@@ -876,14 +886,14 @@ def mapTreePar[A:Manifest,B:Manifest](t: Tree[A], f: A => B): Tree[B] = t match 
 
   $(x \otimes y) \otimes (z \otimes w) = (x \otimes (y \otimes z)) \otimes w = ((x \otimes y) \otimes z) \otimes w$
 
-### 2.4.2. Trees for expressions
+### 2.4.3. Trees for expressions
 
   Each expression built from values connected with $\otimes$ can be represented as a tree
 
   - leaves are the values
   - nodes are $\otimes$
 
-### 2.4.3. Folding (reducing) trees
+### 2.4.4. Folding (reducing) trees
 
   Result of evaluating the expression is given by a reduce of this tree.
 
@@ -910,7 +920,7 @@ def reduce[A](t: Tree[A], f: (A,A) => A): A = t match {
 }
 ```
 
-### 2.4.4. Associativity stated as tree reduction
+### 2.4.5. Associativity stated as tree reduction
 
   If `f` denotes $\otimes$, in Scala we can write this also as:
 
@@ -919,7 +929,7 @@ reduce(Node(Leaf(x), Node(Leaf(y), Leaf(z))), f) ==
 reduce(Node(Node(Leaf(x), Leaf(y)), Leaf(z)), f)
 ```
 
-### 2.4.5. Order of elements in a tree
+### 2.4.6. Order of elements in a tree
 
   Observe: can use a list to describe the ordering of elements of a tree
 
@@ -947,7 +957,7 @@ def map[A,B](t: Tree[A], f: A => B): Tree[B] = t match {
 
   Consequence of associativity(Scala): if `f: (A,A) => A` is associative, `t1: Tree[A]` and `t2: Tree[B]` satisfies `toList(t1) == toList(t2)`, then: `reduce(t1, f) == reduce(t2, f)`.
 
-### 2.4.6. Towards a reduction for arrays
+### 2.4.7. Towards a reduction for arrays
 
   Often we work with collections where we only know the ordering and not the tree structure, e.g., arrays. We can convert it into a balanced tree then do tree reduction.
 
@@ -1060,6 +1070,80 @@ sum / length
 
   If `f` satisfies `f(f(x,y),z) = f(f(y,z),x)`(symmetry) and `f(x,y) = f(y,x)`(commutativity) for every `x, y, z`, we have `f(f(x,y),z) = f(x, f((y,z)))`(associativity).
 
+## 2.6. Parallel Scan Operation
+
+### 2.6.1. `scanLeft`: meaning and properties
+
+  `scanLeft`: list of the folds of all list prefixes
+
+  `List(1,3,8).scanLeft(100)((s,x) => s + x) == List(100, 101, 104, 112)`
+
+  `scanRight` is different from `scanLeft`
+
+  `List(1,3,8).scanRight(100)((s,x) => s + x) == List(112, 104, 101, 100)`
+
+### 2.6.2. Sequential Scan
+
+  $List(a_1, a_2, a_3, ..., a_N).scanLeft(a_0)(f) = List(b_0, b_1, b_2, ..., b_N)$
+
+  where $b_0 = a_0$ and $b_i = f(b_{i-1}, a_i)$ for $1 \le i \le N$. We also assume $f$ is associative in the remaining of this segment.
+
+```scala
+// Sequential scanLeft.
+// Assume out.length >= inp.length + 1.
+def scanLeft[A](inp: Array[A], a0: A, f: (A,A) => A, out: Array[A]): Unit = {
+  out(0) = a0
+  var a = a0
+  var i = 0
+  while (i < inp.length) {
+    a = f(a,inp(i))
+    i = i + 1
+    out(i) = a
+  }
+}
+```
+
+### 2.6.3. High-level approach: express `scan` using `map` and `reduce`
+
+  Assume input is given in array `inp` and that you have `reduceSeg1` and `mapSeg` functions on array segments:
+
+```scala
+def reduceSeg1[A](inp: Array[A], left: Int, right: Int, a0: A, f: (A,A) => A): A
+
+def mapSeg[A,B](inp: Array[A], left: Int, right: Int, fi: (Int, A) => B, out: Array[B]): Unit
+
+def scanLeft[A](inp: Array[A], a0: A, f: (A,A) => A, out: Array[A]): Unit = {
+  val fi = { (i: Int, v: A) => reduceSeg1(inp, 0, i, a0, f) }
+  mapSeg(inp, 0, inp.length, fi, out)
+  val last = inp.length - 1
+  out(last + 1) = f(out(last), inp(last))
+}
+```
+
+  Reuse computations by saving the intermediate results in a tree. We assume that input collection is also (another) tree.
+
+```scala
+// Trees storing the input collection only have values in leaves
+
+sealed abstract class Tree[A]
+case class Leaf[A](a: A) extends Tree[A]
+case class Node[A](l: Tree[A], r: Tree[A]) extends Tree[A]
+
+
+// Trees storing intermediate values have (res) value in nodes
+sealed abstract class TreeRes[A] { val res: A }
+case class LeafRes[A](override val res: A) extends TreeRes[A]
+case class NodeRes[A[(l: TreeRes[A], override val res: A, r: TreeRes[A])
+
+def reduceRes[A](t: Tree[A], f: (A,A) => A): TreeRes[A] = t match {
+  case Leaf(v): LeafRes(v)
+  case Node(l, r): {
+    val (tL, tR) = (reduceRes(l, f), reduceRes(r, f))
+    val res =  f(tL.res, tR.res)
+    NodeRes(lt, res, rt)
+  }
+}
+```
 
 # 3. Week 3 Data-ParaLLelism
 # 4. Week 4 Data Structures
