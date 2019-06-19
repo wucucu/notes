@@ -79,6 +79,14 @@ These are some notes for the 3rd course of Scala Specialization on Cousera.
     - [2.6.6. `scanLeft` on trees](#266-scanleft-on-trees)
     - [2.6.7. Array reduce by tree](#267-array-reduce-by-tree)
 - [3. Week 3 Data-Parallelism](#3-week-3-data-parallelism)
+  - [Data-Parallel Programming](#data-parallel-programming)
+    - [Data-Parallel Programming Model](#data-parallel-programming-model)
+    - [Example: initializing the array values.](#example-initializing-the-array-values)
+    - [Example: Mandelbrot Set](#example-mandelbrot-set)
+    - [Workload](#workload)
+  - [Data-Parallel Operations](#data-parallel-operations)
+  - [Scala Parallel Collections](#scala-parallel-collections)
+  - [Splitters and Combines](#splitters-and-combines)
 - [4. Week 4 Data Structures](#4-week-4-data-structures)
 
 <!-- /TOC -->
@@ -1233,7 +1241,77 @@ def scanLeft[A](inp: Array[A], a0: A, f: (A,A) => A, out: Array[A]) = {
 ```
 
 # 3. Week 3 Data-Parallelism
+
+## Data-Parallel Programming
+
+### Data-Parallel Programming Model
+
+  The simplest form of data-parallel programmming is the parallel for loop.
+
+### Example: initializing the array values.
+
+```scala
+def initializeArray(xs: Array[Int])(v: Int): Unit {
+  for (i <- (0 until xs.length).par) {
+    xs(i) = v
+  }
+}
+```
+
+### Example: Mandelbrot Set
+
+  Although simple, parallel `for` loop allows writing interesting programs.
+
+  Render a set of complex numbers in the plane for which sequence $z_{n+1} = z_n^2 + c$ does not approach infinity.
+
+  We approximate the definition of the Mandelbrot set - as long as the absolute value of $z_n$ is less than 2, we compute $z_{n+1}$ until we do `maxIterations`
+
+```scala
+private def computePixel(xc: Double, yc: Double, maxIterations: Int): Int = {
+  var i = 0
+  var x, y = 0.0
+  while (x * x + y * y < 4 && i < maxIterations) {
+    val xt = x * x - y * y + xc
+    val yt = 2 * x * y + yc
+    x = xt;
+    y = yt;
+    i += 1
+  }
+  color(i)
+}
+
+// render the set using data-parallel programming
+def parRender(): Unit = {
+  for (idx <- (0 until image.length).par) {
+    val (xc, yc) =  coordinatesFor(idx)
+    image(idx) = computePixel(xc, yc, maxIterations)
+  }
+}
+```
+
+### Workload
+
+  Different data-parallel programs have different workloads.
+
+  `workload` is a function that maps each input element to the amount of work required to process it.
+
+  Uniform workload is defined by a constant function: $w(i) = const$. It is easy to parallel.
+
+  Irregular workload is defined by an arbitrary function: $w(i) = f(i)$. Int eh Mandelbrot case: $w(i) = #iterations$.
+
+  The workload depends on the problem instance.
+
+  Goal of the data-parallel scheduler: efficiently balance the workload across processors without any knowledge about the $w(i)$.
+
+
+## Data-Parallel Operations
+
+## Scala Parallel Collections
+
+## Splitters and Combines
+
 # 4. Week 4 Data Structures
+
 
 
 [WEPSKAM]: https://www.akkadia.org/drepper/cpumemory.pdf
