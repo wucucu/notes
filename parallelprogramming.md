@@ -79,14 +79,22 @@ These are some notes for the 3rd course of Scala Specialization on Cousera.
     - [2.6.6. `scanLeft` on trees](#266-scanleft-on-trees)
     - [2.6.7. Array reduce by tree](#267-array-reduce-by-tree)
 - [3. Week 3 Data-Parallelism](#3-week-3-data-parallelism)
-  - [Data-Parallel Programming](#data-parallel-programming)
-    - [Data-Parallel Programming Model](#data-parallel-programming-model)
-    - [Example: initializing the array values.](#example-initializing-the-array-values)
-    - [Example: Mandelbrot Set](#example-mandelbrot-set)
-    - [Workload](#workload)
-  - [Data-Parallel Operations](#data-parallel-operations)
-  - [Scala Parallel Collections](#scala-parallel-collections)
-  - [Splitters and Combines](#splitters-and-combines)
+  - [3.1. Data-Parallel Programming](#31-data-parallel-programming)
+    - [3.1.1. Data-Parallel Programming Model](#311-data-parallel-programming-model)
+    - [3.1.2. Example: initializing the array values.](#312-example-initializing-the-array-values)
+    - [3.1.3. Example: Mandelbrot Set](#313-example-mandelbrot-set)
+    - [3.1.4. Workload](#314-workload)
+  - [3.2. Data-Parallel Operations](#32-data-parallel-operations)
+    - [3.2.1. Parallel Collections](#321-parallel-collections)
+    - [3.2.2. Non-Parallelizable Operations](#322-non-parallelizable-operations)
+    - [3.2.3. The `fold` Operation](#323-the-fold-operation)
+    - [3.2.4. Use cases of the `fold` Operation](#324-use-cases-of-the-fold-operation)
+    - [3.2.5. Preconditions of the `fold` Operation](#325-preconditions-of-the-fold-operation)
+    - [3.2.6. Limitations of the `fold` Operation](#326-limitations-of-the-fold-operation)
+    - [3.2.7. The `aggregate` Operation](#327-the-aggregate-operation)
+    - [3.2.8. The Transformer Operations](#328-the-transformer-operations)
+  - [3.3. Scala Parallel Collections](#33-scala-parallel-collections)
+  - [3.4. Splitters and Combines](#34-splitters-and-combines)
 - [4. Week 4 Data Structures](#4-week-4-data-structures)
 
 <!-- /TOC -->
@@ -1242,13 +1250,13 @@ def scanLeft[A](inp: Array[A], a0: A, f: (A,A) => A, out: Array[A]) = {
 
 # 3. Week 3 Data-Parallelism
 
-## Data-Parallel Programming
+## 3.1. Data-Parallel Programming
 
-### Data-Parallel Programming Model
+### 3.1.1. Data-Parallel Programming Model
 
-  The simplest form of data-parallel programmming is the parallel for loop.
+  The simplest form of data-parallel programming is the parallel for loop.
 
-### Example: initializing the array values.
+### 3.1.2. Example: initializing the array values.
 
 ```scala
 def initializeArray(xs: Array[Int])(v: Int): Unit {
@@ -1258,7 +1266,7 @@ def initializeArray(xs: Array[Int])(v: Int): Unit {
 }
 ```
 
-### Example: Mandelbrot Set
+### 3.1.3. Example: Mandelbrot Set
 
   Although simple, parallel `for` loop allows writing interesting programs.
 
@@ -1289,7 +1297,7 @@ def parRender(): Unit = {
 }
 ```
 
-### Workload
+### 3.1.4. Workload
 
   Different data-parallel programs have different workloads.
 
@@ -1303,12 +1311,118 @@ def parRender(): Unit = {
 
   Goal of the data-parallel scheduler: efficiently balance the workload across processors without any knowledge about the $w(i)$.
 
+## 3.2. Data-Parallel Operations
 
-## Data-Parallel Operations
+### 3.2.1. Parallel Collections
 
-## Scala Parallel Collections
+  In Scala, most collection operations can become data-parallel. The `.par` call converts a sequential collection to a parallel collection.
 
-## Splitters and Combines
+```scala
+  (1 until 1000).par
+    .filter(n => n % 3 == 0)
+    .count(n => n.toString == n.toString.reverse)
+```
+
+### 3.2.2. Non-Parallelizable Operations
+
+```scala
+// implement the method using the foldLeft method
+def sum(xs: Array[Int]): Int = xs.par.foldLeft(0)(_ + _)
+```
+
+  This implementation does not execute in parallel.
+
+  Notice the `foldLeft` signature, we will find that to compute the final result, the intermediate functions must be invoked sequentially, one after another.
+
+```scala
+def foldLeft[B](z: B)(f: (B, A) => B): B
+```
+
+  Operations `foldRight`, `reduceLeft`, `reduceRight`, `scanLeft`and `scanRight` similarly must process the elements sequentially.
+
+### 3.2.3. The `fold` Operation
+
+  `fold` signature:
+
+```scala
+def fold(z: A)(f: (A, A) => A): A
+```
+
+  The accumulation will have the same type as the elements in the collection instead of having another type parameter for the accumulation type in the above `foldLeft` signature.
+
+  The `fold` operation can process the elements in a reduction tree, so it can execute in parallel.
+
+### 3.2.4. Use cases of the `fold` Operation
+
+```scala
+def sum = {
+  xs.par.fold(0)(_ + _)
+}
+
+def max  = {
+  xs.par.fold(Int.MinValue)(math.max)
+  // xs.par.fold(Int.MinValue)((x, y) => if (x > y) x else y)
+}
+```
+
+### 3.2.5. Preconditions of the `fold` Operation
+
+  Given a list of "paper", "rock" and "scissors" strings, find out who won:
+
+```scala
+Array("paper", "rock", "paper", "scissors").par.fold("")(play)
+
+def play(a: String, b: String): String = List(a, b).sorted match {
+  case List("paper", "scissors") => "scissors"
+  case List("paper", "rock") => "paper"
+  case List("rock", "scissors") => "rock"
+  case List(a, b) if a == b => a
+  case List("", b) => b
+}
+```
+
+```scala
+// The play operator is commutative, but not associative.
+play(play("paper", "rock"), play("paper", "scissors")) == "scissors"
+play("paper", play("rock", play("paper", "scissors"))) == "paper"
+```
+
+  In order for the `fold` operation to work correctly, the following relations must hold:
+
+  `f(a, f(b, c)) ==  f(f(a, b), c)`
+
+  `f(z, a) == f(a, z) == a`
+
+  We say that the neutral element `z` and the binary operator `f` must form a `monoid`.
+
+  Commutativity does not matter for `fold` - the following relation is not necessary:
+
+  `f(a, b) == f(b, a)`
+
+### 3.2.6. Limitations of the `fold` Operation
+
+  The `fold` operation can only produce values of the same type as the collection that it is called on.
+
+### 3.2.7. The `aggregate` Operation
+
+```scala
+def aggregate[B](z: B)(f: (B, A) => B, g: (B, B) => B): B
+
+// Count the number of vowels in a character array.
+Array('E', 'P', 'F', 'L').par.aggregate(0)(
+  (count, c) => if (isVowel(c)) count + 1 else count,
+  _ + _
+)
+```
+
+### 3.2.8. The Transformer Operations
+
+  Transformer combinations, such as `map`, `filter`, `flatMap` and `groupBy`, do not return a single value, but instead return new collections as results. They can also execute in parallel.
+
+
+## 3.3. Scala Parallel Collections
+
+## 3.4. Splitters and Combines
 
 # 4. Week 4 Data Structures
 
