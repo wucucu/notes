@@ -94,7 +94,18 @@ These are some notes for the 3rd course of Scala Specialization on Cousera.
     - [3.2.7. The `aggregate` Operation](#327-the-aggregate-operation)
     - [3.2.8. The Transformer Operations](#328-the-transformer-operations)
   - [3.3. Scala Parallel Collections](#33-scala-parallel-collections)
+    - [3.3.1. Scala Collections Hierarchy](#331-scala-collections-hierarchy)
+    - [3.3.2. Parallel Collection Hierarchy](#332-parallel-collection-hierarchy)
+    - [3.3.3. Writing Parallelism-Agnostic Code](#333-writing-parallelism-agnostic-code)
+    - [3.3.4. Non-Parallelizable Collections](#334-non-parallelizable-collections)
+    - [3.3.5. Parallelizable Collections](#335-parallelizable-collections)
+    - [3.3.6. Computing Set Intersection](#336-computing-set-intersection)
+    - [3.3.7. The Trie](#337-the-trie)
   - [3.4. Splitters and Combines](#34-splitters-and-combines)
+    - [3.4.1. Iterator](#341-iterator)
+    - [3.4.2. Splitter](#342-splitter)
+    - [3.4.3. Builder](#343-builder)
+    - [3.4.4. Combiner](#344-combiner)
 - [4. Week 4 Data Structures](#4-week-4-data-structures)
 
 <!-- /TOC -->
@@ -1422,8 +1433,244 @@ Array('E', 'P', 'F', 'L').par.aggregate(0)(
 
 ## 3.3. Scala Parallel Collections
 
+### 3.3.1. Scala Collections Hierarchy
+
+  - `Traversable[T]`: collection of elements with type `T`, with operations implemented using `foreach`
+  - `Iterable[T]`: collection of elements with type `T`, with operations implemented using `iterator`
+  - `Seq[T]`: an ordered sequence of elements with type `T`
+  - `Set[T]`: a set of elements with type `T` (no duplicates)
+  - `Map[K, T]`: a mpa of keys with type `K` associated with values of type `V` (no duplicate keys)
+
+### 3.3.2. Parallel Collection Hierarchy
+
+  Traits `ParIterable[T]`, `ParSeq[T]`, `ParSet[T]` and `ParMap[K, V]` are the parallel counterparts of different sequential traits.
+
+  For code that is agnostic about parallelism, there exists a separate hierarchy of generic collection traits `GenIterable[T]`, `GenSeq[T]`, `GenSet[T]` and `GenMap[K, V]`.
+
+### 3.3.3. Writing Parallelism-Agnostic Code
+
+  Generic collection traits allow us to write code that is unaware of parallelism.
+
+  Example - find the largest palindrome in the sequence:
+
+```scala
+def largestPalindrome(xs: GenSeq[Int]): Int = {
+  xs.aggregate(Int.MinValue)(
+    (largest, n) =>
+    if (n > largest && n.toString == n.toString.reverse) n else largest,
+    math.max
+  )
+}
+
+val array = (0 until 1000000).toArray
+
+largestPalindrome(array)
+```
+
+### 3.3.4. Non-Parallelizable Collections
+
+  In Scala, a sequential collection can be converted into a parallel one by calling `par`.
+
+### 3.3.5. Parallelizable Collections
+
+  - `ParArray[T]`: parallel array of objects, counterpart of `Array` and `ArrayBuffer`
+  - `ParRange`: parallel range of integers, counterpart of `Range`
+  - `ParVector[T]`: parallel vector, counter part of `Vector`
+  - `immutable.ParHashSet[T]`: counterpart of `immutable.HashSet`
+  - `immutable.ParHashMap[K, V]`: counterpart of `immutable.HashMap`
+  - `mutable.ParHashSet[T]`: counterpart of `mutable.HashSet`
+  - `mutable.ParHashMap[K, V]`: counterpart of `mutable.HashMap`
+  - `ParTrieMap[K, V]`: thread-safe parallel map with atomic snapshots, counterpart of `TrieMap`
+  - for other collections, `par` creates the closest parallel collection - e.g. a `List` is converted to a `ParVector`
+
+### 3.3.6. Computing Set Intersection
+
+```scala
+def intersection(a: GenSet[Int], b: GenSet[Int]): Set[Int] = {
+  val result = mutable.Set[Int]()
+  for (x <- a) if (b contains x) result += x
+  result
+}
+
+// correct for sequential computation
+intersection((0 until 1000).toSet, (0 until 1000 by 4).toSet)
+
+// incorrect because internal result is mutable.Set, parallel computation will lead problems
+intersection((0 until 1000).par.toSet, (0 until 1000 by 4).par.toSet)
+```
+
+  Avoid mutations to the same memory locations without proper synchronization.
+
+```scala
+// correct implementation, use a concurrent collection which can be mutated by multiple threads
+
+import java.util.concurrent
+
+def intersection(a: GenSet[Int], b: GenSet[Int]) = {
+  val result = new ConcurrentSkipListSet[Int]()
+  for (x <- a) if (b contains x) result += x
+  result
+}
+
+intersection((0 until 1000).toSet, (0 until 1000 by 4).toSet)
+intersection((0 until 1000).par.toSet, (0 until 1000 by 4).par.toSet)
+```
+
+```scala
+// correct implementation, avoid side-effects by using the correct combinators
+
+import java.util.concurrent
+
+def intersection(a: GenSet[Int], b: GenSet[Int]): GenSet[Int] = {
+  if (a.size < b.size) a.filter(b(_))
+  else b.filter(a(_))
+}
+
+intersection((0 until 1000).toSet, (0 until 1000 by 4).toSet)
+intersection((0 until 1000).par.toSet, (0 until 1000 by 4).par.toSet)
+```
+
+### 3.3.7. The Trie
+
+  Never modify a parallel collection on which a data-parallel operation is in progress.
+
+  - Never write to a collection that is concurrently traversed.
+  - Never read from a collection that is concurrently modified.
+
+  In either case, program non-deterministically prints different results, or crashes.
+
+  `TrieMap` is an exception to above rules.
+
+  The `snapshot` method can be used to efficiently grab the current state:
+
+```scala
+val graph = concurrent.TrieMap[Int, Int]() ++= (0 until 100000).map(i => (i, i + 1))
+graph(graph.size - 1) = 0
+val previous = graph.snapshot()
+for ((k, v) <- graph.par) graph(k) = previous(v)
+val violation = graph.find({ case (i, v} => v != (i + 2) % graph.size })
+println(s"violation: $violation")
+```
+
 ## 3.4. Splitters and Combines
 
+  - iterators
+  - splitters
+  - builders
+  - combiners
+
+### 3.4.1. Iterator
+
+  Each iterable collection can create its own iterator object.
+
+```scala
+// simplified iterator trait
+trait Iterator[A] {
+  def next(): A
+  def hasNext: Boolean
+}
+
+def iterator: Iterator[A]  // on every collection
+```
+
+  - `next` can be called only if `hasNext` returns `true`
+  - after `hasNext` returns `false`, it will always return `false`
+
+```scala
+// implement foldLeft on an iterator
+trait Iterator[T] {
+  def hasNext: Boolean
+  def next(): T
+  def foldLeft[S](z: S)(f: (S, T) => S): S = {
+    var result = z
+    while (hasNext) result = f(result, next())
+    result
+  }
+}
+```
+
+### 3.4.2. Splitter
+
+  Splitter is a counterpart of iterator used for parallel programming.
+
+```scala
+// simplified splitter trait
+trait  Splitter[A] extends Iterator[A] {
+  def split: Seq[Splitter[A]]
+  def remaining: Int
+}
+
+def splitter: Splitter[A]  // on every parallel collection
+```
+
+  - after calling `split`, the original splitter is left in an undefined state
+  - the resulting splitters traverse disjoint subsets of the original splitter
+  - remaining is an estimate on the number of remaining elements
+  - `split` is an efficient method - $O(log n)$ or better
+
+```scala
+// implement fold on an splitter
+trait Splitter[T] {
+  def split: Seq[Splitter[T]]
+  def remaining: Int
+  def fold(z: T)(f: (T, T) => T): T = {
+    if (remaining < threshold) foldLeft(z)(f)
+    else {
+      val children: Seq[Task[T]] = for (child <- split) yield task { child.fold(z)(f) }
+      children.map(_.join()).foldLeft(z)(f)
+    }
+  }
+}
+```
+
+### 3.4.3. Builder
+
+  Builders are abstractions used for creating new collections.
+
+```scala
+// simplified Builder trait
+trait Builder[A, Repr] {
+  def +=(elem: A): Builder[A, Repr]
+  def result: Repr
+}
+
+def newBuilder: Builder[A, Repr]  // on every collection
+```
+
+  - calling `result` returns a collection of type `Repr`, containing the elements that were previously added with +=
+  - calling `result` leaves the `Builder` in an undefined state
+
+```scala
+trait Traversable[T] {
+  def foreach(f: T => Unit): Unit
+  def newBuilder: Builder[T, Traversable[T]]
+  def filter(p: T => Boolean): Traversable[T] = {
+    val b = newBuilder
+    for (x <- this) if (p(x)) b += x
+    b.result
+  }
+}
+```
+
+### 3.4.4. Combiner
+
+  A combiner is a parallel version of a builder.
+
+```scala
+trait Combiner[A, Repr] extends Builder[A, Repr] {
+  def combine(that: Combiner[A, Repr]): Combiner[A, Repr]
+}
+
+def newCombiner: Combiner[T, Repr]  // on every parallel collection
+```
+
+  - calling `combine` returns a new combiner that contains elements of input combiners
+  - calling `combine` leaves both original Combiners in an undefined state
+  - `combine` is an efficient method: $O(log n)$ or better
+
+```scala
+// Exercise: implement a parallel filter method using splitter and newCombiner
+```
 # 4. Week 4 Data Structures
 
 
