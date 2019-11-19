@@ -7,4 +7,4 @@ TODO: try to add pics to travel notes. Make dir to store the pics for each artic
 
 TODO: Chengdu Travel Note
 
-TODO: 6th
+TODO: 7th
