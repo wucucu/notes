@@ -8,3 +8,5 @@ TODO: try to add pics to travel notes. Make dir to store the pics for each artic
 TODO: Chengdu Travel Note
 
 TODO: 7th
+
+TODO: crypto
